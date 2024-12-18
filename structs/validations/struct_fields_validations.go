@@ -215,8 +215,8 @@ func (s *MapperValidations) FailedValidationsMessage(level int) *string {
 	return &messageString
 }
 
-// String returns a formatted error message. If there are no failed validations, it returns nil
-func (s *MapperValidations) String() *string {
+// StringPtr returns a pointer to the failed validations message
+func (s *MapperValidations) StringPtr() *string {
 	// Return the failed validations message
 	message := s.FailedValidationsMessage(0)
 
