@@ -1,6 +1,7 @@
 package service
 
 import (
+	"errors"
 	goflagmode "github.com/ralvarezdev/go-flags/mode"
 	govalidatorbirthdate "github.com/ralvarezdev/go-validator/field/birthdate"
 	govalidatormail "github.com/ralvarezdev/go-validator/field/mail"
@@ -28,7 +29,7 @@ type (
 			*govalidatorvalidations.MapperValidations,
 			error,
 		)
-		CheckValidations(mapperValidations *govalidatorvalidations.MapperValidations) *string
+		CheckValidations(mapperValidations *govalidatorvalidations.MapperValidations) error
 	}
 
 	// DefaultValidator struct
@@ -92,10 +93,16 @@ func (d *DefaultValidator) ValidateNilFields(
 // CheckValidations checks the validations and returns a pointer to the error message
 func (d *DefaultValidator) CheckValidations(
 	mapperValidations *govalidatorvalidations.MapperValidations,
-) *string {
+) error {
 	// Get the error message from the validations if there are any
 	if mapperValidations.HasFailed() {
-		return mapperValidations.StringPtr()
+		// Get the validations
+		validations := mapperValidations.StringPtr()
+
+		if validations != nil {
+			return errors.New(*validations)
+		}
+		return NilValidationsError
 	}
 	return nil
 }
