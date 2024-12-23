@@ -18,37 +18,37 @@ type (
 		ValidateEmail(
 			emailField string,
 			email string,
-			validations *govalidatorvalidations.Validations,
+			validations govalidatorvalidations.Validations,
 		)
 		ValidateBirthdate(
 			birthdateField string,
 			birthdate *timestamppb.Timestamp,
-			validations *govalidatorvalidations.Validations,
+			validations govalidatorvalidations.Validations,
 		)
 		ValidateNilFields(
 			request interface{},
 			mapper *govalidatormapper.Mapper,
 		) (
-			*govalidatorvalidations.Validations,
+			govalidatorvalidations.Validations,
 			error,
 		)
-		CheckValidations(validations *govalidatorvalidations.Validations) error
+		CheckValidations(validations govalidatorvalidations.Validations) error
 	}
 
-	// DefaultValidator struct
-	DefaultValidator struct {
+	// DefaultService struct
+	DefaultService struct {
 		mode      *goflagmode.Flag
 		generator govalidatorvalidations.Generator
 		validator govalidatorvalidations.Validator
 	}
 )
 
-// NewDefaultValidator creates a new default validator
-func NewDefaultValidator(
+// NewDefaultService creates a new default validator service
+func NewDefaultService(
 	generator govalidatorvalidations.Generator,
 	validator govalidatorvalidations.Validator,
 	mode *goflagmode.Flag,
-) (*DefaultValidator, error) {
+) (*DefaultService, error) {
 	// Check if the generator or the validator is nil
 	if generator == nil {
 		return nil, govalidatorvalidations.NilGeneratorError
@@ -57,7 +57,7 @@ func NewDefaultValidator(
 		return nil, govalidatorvalidations.NilValidatorError
 	}
 
-	return &DefaultValidator{
+	return &DefaultService{
 		mode:      mode,
 		generator: generator,
 		validator: validator,
@@ -65,18 +65,18 @@ func NewDefaultValidator(
 }
 
 // ModeFlag returns the mode flag
-func (d *DefaultValidator) ModeFlag() *goflagmode.Flag {
+func (d *DefaultService) ModeFlag() *goflagmode.Flag {
 	return d.mode
 }
 
 // ValidateEmail validates the email address field
-func (d *DefaultValidator) ValidateEmail(
+func (d *DefaultService) ValidateEmail(
 	emailField string,
 	email string,
-	validations *govalidatorvalidations.Validations,
+	validations govalidatorvalidations.Validations,
 ) {
 	if _, err := govalidatormail.ValidMailAddress(email); err != nil {
-		(*validations).AddFailedFieldValidationError(
+		validations.AddFailedFieldValidationError(
 			emailField,
 			govalidatormail.InvalidMailAddressError,
 		)
@@ -84,13 +84,13 @@ func (d *DefaultValidator) ValidateEmail(
 }
 
 // ValidateBirthdate validates the birthdate field
-func (d *DefaultValidator) ValidateBirthdate(
+func (d *DefaultService) ValidateBirthdate(
 	birthdateField string,
 	birthdate *timestamppb.Timestamp,
-	validations *govalidatorvalidations.Validations,
+	validations govalidatorvalidations.Validations,
 ) {
 	if birthdate == nil || birthdate.AsTime().After(time.Now()) {
-		(*validations).AddFailedFieldValidationError(
+		validations.AddFailedFieldValidationError(
 			birthdateField,
 			govalidatorbirthdate.InvalidBirthdateError,
 		)
@@ -98,7 +98,7 @@ func (d *DefaultValidator) ValidateBirthdate(
 }
 
 // ValidateNilFields validates the nil fields
-func (d *DefaultValidator) ValidateNilFields(
+func (d *DefaultService) ValidateNilFields(
 	request interface{},
 	mapper *govalidatormapper.Mapper,
 ) (govalidatorvalidations.Validations, error) {
@@ -109,7 +109,7 @@ func (d *DefaultValidator) ValidateNilFields(
 }
 
 // CheckValidations checks the validations and returns a pointer to the error message
-func (d *DefaultValidator) CheckValidations(
+func (d *DefaultService) CheckValidations(
 	validations govalidatorvalidations.Validations,
 ) error {
 	// Get the error message from the validations if there are any
