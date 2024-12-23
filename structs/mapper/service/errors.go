@@ -7,7 +7,6 @@ import (
 var (
 	ValidationsError             = "validations error: %v"
 	FailedToGenerateMessageError = errors.New("failed to generate message")
-	NilValidatorError            = errors.New("validator cannot be nil")
-	NilMessageError              = errors.New("message cannot be nil")
+	NilServiceError              = errors.New("validator service cannot be nil")
 	NilValidationsError          = errors.New("validations cannot be nil")
 )
