@@ -38,15 +38,15 @@ type (
 	// DefaultValidator struct
 	DefaultValidator struct {
 		mode      *goflagmode.Flag
-		generator *govalidatorvalidations.Generator
-		validator *govalidatorvalidations.Validator
+		generator govalidatorvalidations.Generator
+		validator govalidatorvalidations.Validator
 	}
 )
 
 // NewDefaultValidator creates a new default validator
 func NewDefaultValidator(
-	generator *govalidatorvalidations.Generator,
-	validator *govalidatorvalidations.Validator,
+	generator govalidatorvalidations.Generator,
+	validator govalidatorvalidations.Validator,
 	mode *goflagmode.Flag,
 ) (*DefaultValidator, error) {
 	// Check if the generator or the validator is nil
@@ -101,20 +101,19 @@ func (d *DefaultValidator) ValidateBirthdate(
 func (d *DefaultValidator) ValidateNilFields(
 	request interface{},
 	mapper *govalidatormapper.Mapper,
-) (*govalidatorvalidations.Validations, error) {
+) (govalidatorvalidations.Validations, error) {
 	return d.validator.ValidateNilFields(
 		request,
 		mapper,
-		d.mode,
 	)
 }
 
 // CheckValidations checks the validations and returns a pointer to the error message
 func (d *DefaultValidator) CheckValidations(
-	validations *govalidatorvalidations.Validations,
+	validations govalidatorvalidations.Validations,
 ) error {
 	// Get the error message from the validations if there are any
-	if !(*validations).HasFailed() {
+	if !validations.HasFailed() {
 		return nil
 	}
 

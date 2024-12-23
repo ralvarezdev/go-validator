@@ -13,7 +13,7 @@ type (
 		ValidateNilFields(
 			data interface{},
 			mapper *mapper.Mapper,
-		)
+		) (validations Validations, err error)
 	}
 
 	// DefaultValidator struct
@@ -31,11 +31,11 @@ func NewDefaultValidator(
 	}
 }
 
-// ValidateMapperNilFields validates if the fields are not nil
-func (d *DefaultValidator) ValidateMapperNilFields(
+// ValidateNilFields validates if the fields are not nil
+func (d *DefaultValidator) ValidateNilFields(
 	data interface{},
 	mapper *mapper.Mapper,
-) (mapperValidations *DefaultValidations, err error) {
+) (validations Validations, err error) {
 	// Check if either the data or the struct fields to validate are nil
 	if data == nil {
 		return nil, NilDataError
@@ -45,7 +45,7 @@ func (d *DefaultValidator) ValidateMapperNilFields(
 	}
 
 	// Initialize struct fields validations
-	mapperValidations = NewDefaultValidations()
+	validations = NewDefaultValidations()
 
 	// Reflection of data
 	valueReflection := reflect.ValueOf(data)
@@ -97,7 +97,7 @@ func (d *DefaultValidator) ValidateMapperNilFields(
 				if d.mode != nil && d.mode.IsDebug() {
 					fmt.Printf("field is uninitialized: %v\n", fieldType.Name)
 				}
-				mapperValidations.AddFailedFieldValidationError(
+				validations.AddFailedFieldValidationError(
 					validationName,
 					FieldNotFoundError,
 				)
@@ -125,7 +125,7 @@ func (d *DefaultValidator) ValidateMapperNilFields(
 			if d.mode != nil && d.mode.IsDev() {
 				fmt.Printf("field is uninitialized: %v\n", fieldType.Name)
 			}
-			mapperValidations.AddFailedFieldValidationError(
+			validations.AddFailedFieldValidationError(
 				validationName,
 				FieldNotFoundError,
 			)
@@ -139,7 +139,7 @@ func (d *DefaultValidator) ValidateMapperNilFields(
 		}
 
 		// Validate nested struct
-		fieldNestedMapperValidations, err := d.ValidateMapperNilFields(
+		fieldNestedMapperValidations, err := d.ValidateNilFields(
 			fieldValue.Addr().Interface(), // TEST IF THIS A POINTER OF THE STRUCT
 			fieldNestedMapper,
 		)
@@ -148,11 +148,11 @@ func (d *DefaultValidator) ValidateMapperNilFields(
 		}
 
 		// Add nested struct validations to the struct fields validations
-		mapperValidations.SetNestedValidations(
+		validations.SetNestedValidations(
 			validationName,
 			fieldNestedMapperValidations,
 		)
 	}
 
-	return mapperValidations, nil
+	return validations, nil
 }

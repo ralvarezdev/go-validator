@@ -23,23 +23,23 @@ type (
 			nestedValidations Validations,
 		)
 		GetFailedValidations() *map[string][]error
-		GetNestedValidations() *map[string]*Validations
+		GetNestedValidations() *map[string]Validations
 	}
 
 	// DefaultValidations is a struct that holds the error messages for failed validations of a struct
 	DefaultValidations struct {
 		FailedValidations *map[string][]error
-		NestedValidations *map[string]*DefaultValidations
+		NestedValidations *map[string]Validations
 	}
 
 	// Generator is an interface for generating struct fields validations
 	Generator interface {
 		GetLevelPadding(level int) string
 		GenerateFailedValidationsMessage(
-			validations *Validations,
+			validations Validations,
 			level int,
 		) (*string, error)
-		Generate(validations *Validations) (*string, error)
+		Generate(validations Validations) (*string, error)
 	}
 
 	// DefaultGenerator is a struct that holds the default fields names for the generated validations of a struct
@@ -63,7 +63,7 @@ var DefaultFields = NewFields("$validations", "$errors")
 func NewDefaultValidations() *DefaultValidations {
 	// Initialize the struct fields validations
 	failedFieldsValidations := make(map[string][]error)
-	nestedFieldsValidations := make(map[string]*DefaultValidations)
+	nestedFieldsValidations := make(map[string]Validations)
 
 	return &DefaultValidations{
 		FailedValidations: &failedFieldsValidations,
@@ -122,7 +122,7 @@ func (d *DefaultValidations) AddFailedFieldValidationError(
 // SetNestedValidations sets the nested struct fields validations to the struct
 func (d *DefaultValidations) SetNestedValidations(
 	validationName string,
-	nestedValidations *DefaultValidations,
+	nestedValidations Validations,
 ) {
 	(*d.NestedValidations)[validationName] = nestedValidations
 }
@@ -133,7 +133,7 @@ func (d *DefaultValidations) GetFailedValidations() *map[string][]error {
 }
 
 // GetNestedValidations returns the nested struct fields validations
-func (d *DefaultValidations) GetNestedValidations() *map[string]*DefaultValidations {
+func (d *DefaultValidations) GetNestedValidations() *map[string]Validations {
 	return d.NestedValidations
 }
 
@@ -148,7 +148,7 @@ func (d *DefaultGenerator) GetLevelPadding(level int) string {
 
 // GenerateFailedValidationsMessage returns a formatted error message for DefaultGenerator
 func (d *DefaultGenerator) GenerateFailedValidationsMessage(
-	validations *Validations,
+	validations Validations,
 	level int,
 ) (*string, error) {
 	// Check if the validations are nil
@@ -157,8 +157,7 @@ func (d *DefaultGenerator) GenerateFailedValidationsMessage(
 	}
 
 	// Check if there are failed validations
-	validationsStruct := *validations
-	if !validationsStruct.HasFailed() {
+	if !validations.HasFailed() {
 		return nil, nil
 	}
 
@@ -181,16 +180,16 @@ func (d *DefaultGenerator) GenerateFailedValidationsMessage(
 	iteratedFieldsValidationsNumber := 0
 	iteratedNestedFieldsValidationsNumber := 0
 
-	if validationsStruct.GetFailedValidations() != nil {
-		fieldsValidationsNumber = len(*validationsStruct.GetFailedValidations())
+	if validations.GetFailedValidations() != nil {
+		fieldsValidationsNumber = len(*validations.GetFailedValidations())
 	}
-	if validationsStruct.GetNestedValidations() != nil {
-		nestedFieldsValidationsNumber = len(*validationsStruct.GetNestedValidations())
+	if validations.GetNestedValidations() != nil {
+		nestedFieldsValidationsNumber = len(*validations.GetNestedValidations())
 	}
 
 	// Iterate over all fields and their errors
-	var nestedValidations *map[string]*Validations
-	for field, fieldErrors := range *validationsStruct.GetFailedValidations() {
+	var nestedValidations *map[string]Validations
+	for field, fieldErrors := range *validations.GetFailedValidations() {
 		iteratedFieldsValidationsNumber++
 
 		// Check if the field has no errors
@@ -223,16 +222,16 @@ func (d *DefaultGenerator) GenerateFailedValidationsMessage(
 		}
 
 		// Get the nested fields validations for the field if it has any
-		var nestedFieldValidations *Validations
+		var nestedFieldValidations Validations
 		ok := false
 		if nestedFieldsValidationsNumber > 0 {
-			nestedValidations = validationsStruct.GetNestedValidations()
+			nestedValidations = validations.GetNestedValidations()
 			nestedFieldValidations, ok = (*nestedValidations)[field]
 		}
 
 		// Add comma if not it does not have nested fields
 		message.WriteString(fieldPropertiesPadding)
-		if !ok || !(*nestedFieldValidations).HasFailed() {
+		if !ok || !nestedFieldValidations.HasFailed() {
 			if ok {
 				iteratedNestedFieldsValidationsNumber++
 			}
@@ -266,7 +265,7 @@ func (d *DefaultGenerator) GenerateFailedValidationsMessage(
 
 	// Iterate over all nested fields validations
 	if iteratedNestedFieldsValidationsNumber < nestedFieldsValidationsNumber {
-		for field, nestedFieldValidations := range *validationsStruct.GetNestedValidations() {
+		for field, nestedFieldValidations := range *validations.GetNestedValidations() {
 			if _, ok := iteratedFields[field]; ok {
 				continue
 			}
@@ -310,7 +309,7 @@ func (d *DefaultGenerator) GenerateFailedValidationsMessage(
 }
 
 // Generate returns a pointer to the failed validations message
-func (d *DefaultGenerator) Generate(validations *Validations) (
+func (d *DefaultGenerator) Generate(validations Validations) (
 	message *string,
 	err error,
 ) {
