@@ -18,19 +18,16 @@ type (
 
 	// DefaultValidator struct
 	DefaultValidator struct {
-		mode   *goflagsmode.Flag
-		fields *Fields
+		mode *goflagsmode.Flag
 	}
 )
 
 // NewDefaultValidator creates a new default mapper validator
 func NewDefaultValidator(
 	mode *goflagsmode.Flag,
-	fields *Fields,
 ) *DefaultValidator {
 	return &DefaultValidator{
-		mode:   mode,
-		fields: fields,
+		mode: mode,
 	}
 }
 
