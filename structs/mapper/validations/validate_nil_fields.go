@@ -7,12 +7,38 @@ import (
 	"reflect"
 )
 
+type (
+	// Validator interface
+	Validator interface {
+		ValidateNilFields(
+			data interface{},
+			mapper *mapper.Mapper,
+		)
+	}
+
+	// DefaultValidator struct
+	DefaultValidator struct {
+		mode   *goflagsmode.Flag
+		fields *Fields
+	}
+)
+
+// NewDefaultValidator creates a new default mapper validator
+func NewDefaultValidator(
+	mode *goflagsmode.Flag,
+	fields *Fields,
+) *DefaultValidator {
+	return &DefaultValidator{
+		mode:   mode,
+		fields: fields,
+	}
+}
+
 // ValidateMapperNilFields validates if the fields are not nil
-func ValidateMapperNilFields(
+func (d *DefaultValidator) ValidateMapperNilFields(
 	data interface{},
 	mapper *mapper.Mapper,
-	mode *goflagsmode.Flag,
-) (mapperValidations *MapperValidations, err error) {
+) (mapperValidations *DefaultValidations, err error) {
 	// Check if either the data or the struct fields to validate are nil
 	if data == nil {
 		return nil, NilDataError
@@ -22,7 +48,7 @@ func ValidateMapperNilFields(
 	}
 
 	// Initialize struct fields validations
-	mapperValidations = NewMapperValidations()
+	mapperValidations = NewDefaultValidations()
 
 	// Reflection of data
 	valueReflection := reflect.ValueOf(data)
@@ -48,8 +74,13 @@ func ValidateMapperNilFields(
 		fieldType := typeReflection.Field(i)
 
 		// Print field on debug mode
-		if mode != nil && mode.IsDebug() {
-			fmt.Printf("field '%v' of type '%v' value: %v\n", fieldType.Name, fieldType.Type, fieldValue)
+		if d.mode != nil && d.mode.IsDebug() {
+			fmt.Printf(
+				"field '%v' of type '%v' value: %v\n",
+				fieldType.Name,
+				fieldType.Type,
+				fieldValue,
+			)
 		}
 
 		// Check if the field is a pointer
@@ -66,10 +97,13 @@ func ValidateMapperNilFields(
 			// Check if the field is uninitialized
 			if fieldValue.IsZero() {
 				// Print error on debug mode
-				if mode != nil && mode.IsDebug() {
+				if d.mode != nil && d.mode.IsDebug() {
 					fmt.Printf("field is uninitialized: %v\n", fieldType.Name)
 				}
-				mapperValidations.AddFailedFieldValidationError(validationName, FieldNotFoundError)
+				mapperValidations.AddFailedFieldValidationError(
+					validationName,
+					FieldNotFoundError,
+				)
 			}
 			continue
 		}
@@ -91,10 +125,13 @@ func ValidateMapperNilFields(
 		// Check if the field is initialized
 		if fieldValue.IsNil() {
 			// Print error on dev mode
-			if mode != nil && mode.IsDev() {
+			if d.mode != nil && d.mode.IsDev() {
 				fmt.Printf("field is uninitialized: %v\n", fieldType.Name)
 			}
-			mapperValidations.AddFailedFieldValidationError(validationName, FieldNotFoundError)
+			mapperValidations.AddFailedFieldValidationError(
+				validationName,
+				FieldNotFoundError,
+			)
 			continue
 		}
 
@@ -105,17 +142,19 @@ func ValidateMapperNilFields(
 		}
 
 		// Validate nested struct
-		fieldNestedMapperValidations, err := ValidateMapperNilFields(
+		fieldNestedMapperValidations, err := d.ValidateMapperNilFields(
 			fieldValue.Addr().Interface(), // TEST IF THIS A POINTER OF THE STRUCT
 			fieldNestedMapper,
-			mode,
 		)
 		if err != nil {
 			return nil, err
 		}
 
 		// Add nested struct validations to the struct fields validations
-		mapperValidations.SetNestedMapperValidations(validationName, fieldNestedMapperValidations)
+		mapperValidations.SetNestedValidations(
+			validationName,
+			fieldNestedMapperValidations,
+		)
 	}
 
 	return mapperValidations, nil

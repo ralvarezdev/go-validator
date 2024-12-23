@@ -19,14 +19,45 @@ const (
 	JSONOmitempty      = "omitempty"
 )
 
-// Mapper is a map of fields to validate from a struct
-type Mapper struct {
-	Fields        map[string]string // Key is the field name and value is the name used in the validation error
-	NestedMappers map[string]*Mapper
+type (
+	// Mapper is a map of fields to validate from a struct
+	Mapper struct {
+		Fields        map[string]string // Key is the field name and value is the name used in the validation error
+		NestedMappers map[string]*Mapper
+	}
+
+	// Generator is an interface for creating a mapper
+	Generator interface {
+		NewMapper(structInstance interface{}) (*Mapper, error)
+	}
+
+	// ProtobufGenerator is a generator for Protobuf mappers
+	ProtobufGenerator struct {
+		mode *goflagsmode.Flag
+	}
+
+	// JSONGenerator is a generator for JSON mappers
+	JSONGenerator struct {
+		mode *goflagsmode.Flag
+	}
+)
+
+// NewProtobufGenerator creates a new Protobuf generator
+func NewProtobufGenerator(mode *goflagsmode.Flag) *ProtobufGenerator {
+	return &ProtobufGenerator{
+		mode: mode,
+	}
 }
 
-// CreateProtobufMapper creates the fields to validate from a Protobuf compiled struct
-func CreateProtobufMapper(structInstance interface{}, mode *goflagsmode.Flag) (
+// NewJSONGenerator creates a new JSON generator
+func NewJSONGenerator(mode *goflagsmode.Flag) *JSONGenerator {
+	return &JSONGenerator{
+		mode: mode,
+	}
+}
+
+// NewMapper creates the fields to validate from a Protobuf compiled struct
+func (p *ProtobufGenerator) NewMapper(structInstance interface{}) (
 	*Mapper,
 	error,
 ) {
@@ -56,7 +87,7 @@ func CreateProtobufMapper(structInstance interface{}, mode *goflagsmode.Flag) (
 
 		// Print field on debug mode
 		fieldType := field.Type
-		if mode != nil && mode.IsDebug() {
+		if p.mode != nil && p.mode.IsDebug() {
 			fmt.Printf("field '%v' type: %v\n", field.Name, fieldType)
 		}
 
@@ -87,9 +118,8 @@ func CreateProtobufMapper(structInstance interface{}, mode *goflagsmode.Flag) (
 			}
 
 			// Create a new Mapper for the nested struct field
-			fieldNestedMapper, err := CreateProtobufMapper(
+			fieldNestedMapper, err := p.NewMapper(
 				reflect.New(fieldType).Interface(),
-				mode,
 			)
 			if err != nil {
 				return nil, err
@@ -129,8 +159,8 @@ func CreateProtobufMapper(structInstance interface{}, mode *goflagsmode.Flag) (
 	}, nil
 }
 
-// CreateJSONMapper creates the fields to validate from a JSON struct
-func CreateJSONMapper(structInstance interface{}, mode *goflagsmode.Flag) (
+// NewMapper creates the fields to validate from a JSON struct
+func (j *JSONGenerator) NewMapper(structInstance interface{}) (
 	*Mapper,
 	error,
 ) {
@@ -155,13 +185,20 @@ func CreateJSONMapper(structInstance interface{}, mode *goflagsmode.Flag) (
 
 		// Print field on debug mode
 		fieldType := field.Type
-		if mode != nil && mode.IsDebug() {
+		if j.mode != nil && j.mode.IsDebug() {
 			fmt.Printf("field '%v' type: %v\n", field.Name, fieldType)
 		}
 
 		// Get the JSON tag of the field
 		jsonTag = field.Tag.Get(JSONTag)
 		if jsonTag == "" {
+			// Check if the field is a protoc generated field
+			if field.Name == State || field.Name == SizeCache || field.Name == UnknownFields {
+				return nil, fmt.Errorf(
+					MissingJSONTagLooksLikeProtocFieldError,
+					field.Name,
+				)
+			}
 			return nil, fmt.Errorf(MissingJSONTagError, field.Name)
 		}
 
@@ -183,9 +220,8 @@ func CreateJSONMapper(structInstance interface{}, mode *goflagsmode.Flag) (
 		// Check if the element type is a struct
 		if fieldType.Kind() == reflect.Struct {
 			// Create a new Mapper for the nested struct field
-			fieldNestedMapper, err := CreateJSONMapper(
+			fieldNestedMapper, err := j.NewMapper(
 				reflect.New(fieldType).Interface(),
-				mode,
 			)
 			if err != nil {
 				return nil, err

@@ -1,48 +1,67 @@
 package service
 
 import (
-	"errors"
+	"fmt"
 	goflagmode "github.com/ralvarezdev/go-flags/mode"
 	govalidatorbirthdate "github.com/ralvarezdev/go-validator/field/birthdate"
 	govalidatormail "github.com/ralvarezdev/go-validator/field/mail"
 	govalidatormapper "github.com/ralvarezdev/go-validator/structs/mapper"
-	govalidatorvalidations "github.com/ralvarezdev/go-validator/structs/validations"
+	govalidatorvalidations "github.com/ralvarezdev/go-validator/structs/mapper/validations"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"time"
 )
 
 type (
-	// Validator interface
-	Validator interface {
+	// Service interface for the validator service
+	Service interface {
 		ModeFlag() *goflagmode.Flag
 		ValidateEmail(
 			emailField string,
 			email string,
-			mapperValidations *govalidatorvalidations.MapperValidations,
+			validations *govalidatorvalidations.Validations,
 		)
 		ValidateBirthdate(
 			birthdateField string,
 			birthdate *timestamppb.Timestamp,
-			mapperValidations *govalidatorvalidations.MapperValidations,
+			validations *govalidatorvalidations.Validations,
 		)
-		ValidateNilFields(request interface{}, mapper *govalidatormapper.Mapper) (
-			*govalidatorvalidations.MapperValidations,
+		ValidateNilFields(
+			request interface{},
+			mapper *govalidatormapper.Mapper,
+		) (
+			*govalidatorvalidations.Validations,
 			error,
 		)
-		CheckValidations(mapperValidations *govalidatorvalidations.MapperValidations) error
+		CheckValidations(validations *govalidatorvalidations.Validations) error
 	}
 
 	// DefaultValidator struct
 	DefaultValidator struct {
-		mode *goflagmode.Flag
+		mode      *goflagmode.Flag
+		generator *govalidatorvalidations.Generator
+		validator *govalidatorvalidations.Validator
 	}
 )
 
 // NewDefaultValidator creates a new default validator
-func NewDefaultValidator(mode *goflagmode.Flag) *DefaultValidator {
-	return &DefaultValidator{
-		mode: mode,
+func NewDefaultValidator(
+	generator *govalidatorvalidations.Generator,
+	validator *govalidatorvalidations.Validator,
+	mode *goflagmode.Flag,
+) (*DefaultValidator, error) {
+	// Check if the generator or the validator is nil
+	if generator == nil {
+		return nil, govalidatorvalidations.NilGeneratorError
 	}
+	if validator == nil {
+		return nil, govalidatorvalidations.NilValidatorError
+	}
+
+	return &DefaultValidator{
+		mode:      mode,
+		generator: generator,
+		validator: validator,
+	}, nil
 }
 
 // ModeFlag returns the mode flag
@@ -54,10 +73,10 @@ func (d *DefaultValidator) ModeFlag() *goflagmode.Flag {
 func (d *DefaultValidator) ValidateEmail(
 	emailField string,
 	email string,
-	mapperValidations *govalidatorvalidations.MapperValidations,
+	validations *govalidatorvalidations.Validations,
 ) {
 	if _, err := govalidatormail.ValidMailAddress(email); err != nil {
-		mapperValidations.AddFailedFieldValidationError(
+		(*validations).AddFailedFieldValidationError(
 			emailField,
 			govalidatormail.InvalidMailAddressError,
 		)
@@ -68,10 +87,10 @@ func (d *DefaultValidator) ValidateEmail(
 func (d *DefaultValidator) ValidateBirthdate(
 	birthdateField string,
 	birthdate *timestamppb.Timestamp,
-	mapperValidations *govalidatorvalidations.MapperValidations,
+	validations *govalidatorvalidations.Validations,
 ) {
 	if birthdate == nil || birthdate.AsTime().After(time.Now()) {
-		mapperValidations.AddFailedFieldValidationError(
+		(*validations).AddFailedFieldValidationError(
 			birthdateField,
 			govalidatorbirthdate.InvalidBirthdateError,
 		)
@@ -82,8 +101,8 @@ func (d *DefaultValidator) ValidateBirthdate(
 func (d *DefaultValidator) ValidateNilFields(
 	request interface{},
 	mapper *govalidatormapper.Mapper,
-) (*govalidatorvalidations.MapperValidations, error) {
-	return govalidatorvalidations.ValidateMapperNilFields(
+) (*govalidatorvalidations.Validations, error) {
+	return d.validator.ValidateNilFields(
 		request,
 		mapper,
 		d.mode,
@@ -92,17 +111,21 @@ func (d *DefaultValidator) ValidateNilFields(
 
 // CheckValidations checks the validations and returns a pointer to the error message
 func (d *DefaultValidator) CheckValidations(
-	mapperValidations *govalidatorvalidations.MapperValidations,
+	validations *govalidatorvalidations.Validations,
 ) error {
 	// Get the error message from the validations if there are any
-	if mapperValidations.HasFailed() {
-		// Get the validations
-		validations := mapperValidations.StringPtr()
-
-		if validations != nil {
-			return errors.New(*validations)
-		}
-		return NilValidationsError
+	if !(*validations).HasFailed() {
+		return nil
 	}
-	return nil
+
+	// Get the validations message
+	message, err := d.generator.Generate(validations)
+	if err != nil {
+		return FailedToGenerateMessageError
+	}
+
+	if message != nil {
+		return fmt.Errorf(ValidationsError, *message)
+	}
+	return NilValidationsError
 }
