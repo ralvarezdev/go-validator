@@ -51,10 +51,10 @@ func NewDefaultService(
 ) (*DefaultService, error) {
 	// Check if the generator or the validator is nil
 	if generator == nil {
-		return nil, govalidatorvalidations.NilGeneratorError
+		return nil, govalidatorvalidations.ErrNilGenerator
 	}
 	if validator == nil {
-		return nil, govalidatorvalidations.NilValidatorError
+		return nil, govalidatorvalidations.ErrNilValidator
 	}
 
 	return &DefaultService{
@@ -78,7 +78,7 @@ func (d *DefaultService) ValidateEmail(
 	if _, err := govalidatormail.ValidMailAddress(email); err != nil {
 		validations.AddFailedFieldValidationError(
 			emailField,
-			govalidatormail.InvalidMailAddressError,
+			govalidatormail.ErrInvalidMailAddress,
 		)
 	}
 }
@@ -92,7 +92,7 @@ func (d *DefaultService) ValidateBirthdate(
 	if birthdate == nil || birthdate.AsTime().After(time.Now()) {
 		validations.AddFailedFieldValidationError(
 			birthdateField,
-			govalidatorbirthdate.InvalidBirthdateError,
+			govalidatorbirthdate.ErrInvalidBirthdate,
 		)
 	}
 }
@@ -120,11 +120,11 @@ func (d *DefaultService) CheckValidations(
 	// Get the validations message
 	message, err := d.generator.Generate(validations)
 	if err != nil {
-		return FailedToGenerateMessageError
+		return ErrFailedToGenerateMessage
 	}
 
 	if message != nil {
-		return fmt.Errorf(ValidationsError, *message)
+		return fmt.Errorf(ErrValidations, *message)
 	}
-	return NilValidationsError
+	return ErrNilValidations
 }

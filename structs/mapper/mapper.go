@@ -96,7 +96,7 @@ func (p *ProtobufGenerator) NewMapper(structInstance interface{}) (
 			// Get the Protobuf tag of the field
 			protobufTag = field.Tag.Get(ProtobufTag)
 			if protobufTag == "" {
-				return nil, fmt.Errorf(MissingProtobufTagError, field.Name)
+				return nil, fmt.Errorf(ErrMissingProtobufTag, field.Name)
 			}
 		} else {
 			fieldType = fieldType.Elem()
@@ -109,7 +109,7 @@ func (p *ProtobufGenerator) NewMapper(structInstance interface{}) (
 			// Get the Protobuf tag of the field
 			protobufTag = field.Tag.Get(ProtobufTag)
 			if protobufTag == "" {
-				return nil, fmt.Errorf(MissingProtobufTagError, field.Name)
+				return nil, fmt.Errorf(ErrMissingProtobufTag, field.Name)
 			}
 
 			// Check the tag to determine if it contains 'oneof', which means it is an optional struct field
@@ -141,12 +141,12 @@ func (p *ProtobufGenerator) NewMapper(structInstance interface{}) (
 
 		// Check if the field name is empty
 		if protobufName == "" {
-			return nil, fmt.Errorf(MissingProtobufTagNameError, field.Name)
+			return nil, fmt.Errorf(ErrMissingProtobufTagName, field.Name)
 		}
 
 		// Check if the field name has already been assigned
 		if _, ok := rootMapper[protobufName]; ok {
-			return nil, fmt.Errorf(DuplicateProtobufTagNameError, protobufName)
+			return nil, fmt.Errorf(ErrDuplicateProtobufTagName, protobufName)
 		}
 
 		// Add the field to the map
@@ -195,11 +195,11 @@ func (j *JSONGenerator) NewMapper(structInstance interface{}) (
 			// Check if the field is a protoc generated field
 			if field.Name == State || field.Name == SizeCache || field.Name == UnknownFields {
 				return nil, fmt.Errorf(
-					MissingJSONTagLooksLikeProtocFieldError,
+					ErrMissingJSONTagLooksLikeProtocField,
 					field.Name,
 				)
 			}
-			return nil, fmt.Errorf(MissingJSONTagError, field.Name)
+			return nil, fmt.Errorf(ErrMissingJSONTag, field.Name)
 		}
 
 		// Check if the JSON tag is unassigned
@@ -234,13 +234,13 @@ func (j *JSONGenerator) NewMapper(structInstance interface{}) (
 		// Get the field name from the JSON tag
 		tagParts := strings.Split(jsonTag, ",")
 		if len(tagParts) == 0 {
-			return nil, fmt.Errorf(EmptyJSONTagError, field.Name)
+			return nil, fmt.Errorf(ErrEmptyJSONTag, field.Name)
 		}
 		jsonName = tagParts[0]
 
 		// Check if the field name has already been assigned
 		if _, ok := rootMapper[jsonName]; ok {
-			return nil, fmt.Errorf(DuplicateJSONTagNameError, jsonName)
+			return nil, fmt.Errorf(ErrDuplicateJSONTagName, jsonName)
 		}
 
 		// Add the field to the map

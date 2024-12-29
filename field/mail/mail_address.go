@@ -8,13 +8,13 @@ import (
 func ValidMailAddress(address string) (string, error) {
 	// Check if the mail address is empty
 	if address == "" {
-		return "", InvalidMailAddressError
+		return "", ErrInvalidMailAddress
 	}
 
 	// Check if the mail address is valid
 	addr, err := mail.ParseAddress(address)
 	if err != nil {
-		return "", InvalidMailAddressError
+		return "", ErrInvalidMailAddress
 	}
 
 	return addr.Address, nil

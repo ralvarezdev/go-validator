@@ -153,7 +153,7 @@ func (d *DefaultGenerator) GenerateFailedValidationsMessage(
 ) (*string, error) {
 	// Check if the validations are nil
 	if validations == nil {
-		return nil, NilValidationsError
+		return nil, ErrNilValidations
 	}
 
 	// Check if there are failed validations

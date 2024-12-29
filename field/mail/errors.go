@@ -5,5 +5,5 @@ import (
 )
 
 var (
-	InvalidMailAddressError = errors.New("invalid mail address")
+	ErrInvalidMailAddress = errors.New("invalid mail address")
 )

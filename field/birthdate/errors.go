@@ -5,5 +5,5 @@ import (
 )
 
 var (
-	InvalidBirthdateError = errors.New("invalid birthdate")
+	ErrInvalidBirthdate = errors.New("invalid birthdate")
 )

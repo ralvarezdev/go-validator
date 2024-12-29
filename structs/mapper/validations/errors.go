@@ -5,10 +5,10 @@ import (
 )
 
 var (
-	NilDataError        = errors.New("data cannot be nil")
-	NilMapperError      = errors.New("mapper cannot be nil")
-	NilGeneratorError   = errors.New("mapper validations generator cannot be nil")
-	NilValidatorError   = errors.New("mapper validator cannot be nil")
-	NilValidationsError = errors.New("mapper validations cannot be nil")
-	FieldNotFoundError  = errors.New("field not found")
+	ErrNilData        = errors.New("data cannot be nil")
+	ErrNilMapper      = errors.New("mapper cannot be nil")
+	ErrNilGenerator   = errors.New("mapper validations generator cannot be nil")
+	ErrNilValidator   = errors.New("mapper validator cannot be nil")
+	ErrNilValidations = errors.New("mapper validations cannot be nil")
+	ErrFieldNotFound  = errors.New("field not found")
 )

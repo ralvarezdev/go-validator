@@ -38,10 +38,10 @@ func (d *DefaultValidator) ValidateNilFields(
 ) (validations Validations, err error) {
 	// Check if either the data or the struct fields to validate are nil
 	if data == nil {
-		return nil, NilDataError
+		return nil, ErrNilData
 	}
 	if mapper == nil {
-		return nil, NilMapperError
+		return nil, ErrNilMapper
 	}
 
 	// Initialize struct fields validations
@@ -99,7 +99,7 @@ func (d *DefaultValidator) ValidateNilFields(
 				}
 				validations.AddFailedFieldValidationError(
 					validationName,
-					FieldNotFoundError,
+					ErrFieldNotFound,
 				)
 			}
 			continue
@@ -127,7 +127,7 @@ func (d *DefaultValidator) ValidateNilFields(
 			}
 			validations.AddFailedFieldValidationError(
 				validationName,
-				FieldNotFoundError,
+				ErrFieldNotFound,
 			)
 			continue
 		}
