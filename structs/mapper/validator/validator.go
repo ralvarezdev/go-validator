@@ -1,9 +1,10 @@
-package validations
+package validator
 
 import (
 	"fmt"
 	goflagsmode "github.com/ralvarezdev/go-flags/mode"
-	"github.com/ralvarezdev/go-validator/structs/mapper"
+	govalidatormapper "github.com/ralvarezdev/go-validator/structs/mapper"
+	govalidatorvalidations "github.com/ralvarezdev/go-validator/structs/mapper/validations"
 	"reflect"
 )
 
@@ -12,8 +13,8 @@ type (
 	Validator interface {
 		ValidateNilFields(
 			data interface{},
-			mapper *mapper.Mapper,
-		) (validations Validations, err error)
+			mapper *govalidatormapper.Mapper,
+		) (validations govalidatorvalidations.Validations, err error)
 	}
 
 	// DefaultValidator struct
@@ -34,18 +35,18 @@ func NewDefaultValidator(
 // ValidateNilFields validates if the fields are not nil
 func (d *DefaultValidator) ValidateNilFields(
 	data interface{},
-	mapper *mapper.Mapper,
-) (validations Validations, err error) {
+	mapper *govalidatormapper.Mapper,
+) (validations govalidatorvalidations.Validations, err error) {
 	// Check if either the data or the struct fields to validate are nil
 	if data == nil {
-		return nil, ErrNilData
+		return nil, govalidatorvalidations.ErrNilData
 	}
 	if mapper == nil {
-		return nil, ErrNilMapper
+		return nil, govalidatorvalidations.ErrNilMapper
 	}
 
 	// Initialize struct fields validations
-	validations = NewDefaultValidations()
+	validations = govalidatorvalidations.NewDefaultValidations()
 
 	// Reflection of data
 	valueReflection := reflect.ValueOf(data)
@@ -99,7 +100,7 @@ func (d *DefaultValidator) ValidateNilFields(
 				}
 				validations.AddFailedFieldValidationError(
 					validationName,
-					ErrFieldNotFound,
+					govalidatorvalidations.ErrFieldNotFound,
 				)
 			}
 			continue
@@ -127,7 +128,7 @@ func (d *DefaultValidator) ValidateNilFields(
 			}
 			validations.AddFailedFieldValidationError(
 				validationName,
-				ErrFieldNotFound,
+				govalidatorvalidations.ErrFieldNotFound,
 			)
 			continue
 		}
@@ -148,7 +149,7 @@ func (d *DefaultValidator) ValidateNilFields(
 		}
 
 		// Add nested struct validations to the struct fields validations
-		validations.SetNestedValidations(
+		validations.SetNestedFieldsValidations(
 			validationName,
 			fieldNestedMapperValidations,
 		)

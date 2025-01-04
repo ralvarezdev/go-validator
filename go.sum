@@ -1,10 +1,4 @@
-github.com/google/go-cmp v0.6.0 h1:ofyhxvXcZhMsU5ulbFiLKl/XBFqE1GSq7atu8tAmTRI=
-github.com/google/go-cmp v0.6.0/go.mod h1:17dUlkBOakJ0+DkrSSNjCkIjxS6bF9zb3elmeNGIjoY=
-github.com/ralvarezdev/go-flags v0.2.3 h1:mFcSEVGAT6Q/yH61UJxp+uG6acopFW7Bl/rsak8+EsY=
-github.com/ralvarezdev/go-flags v0.2.3/go.mod h1:xc0ii1VySdiV/s17KRo1GJ6bLxy5eOv93Oaz/mSlxtw=
-github.com/ralvarezdev/go-logger v0.2.2 h1:j58spza2L6s+vAibifHSuUPrXm0+6nWZWR3SOg8ihBk=
-github.com/ralvarezdev/go-logger v0.2.2/go.mod h1:v5OvFrkS+wsYNTCVegXWiRhBtcYrQJr4LDMDntvpAos=
-google.golang.org/protobuf v1.36.0 h1:mjIs9gYtt56AzC4ZaffQuh88TZurBGhIJMBZGSxNerQ=
-google.golang.org/protobuf v1.36.0/go.mod h1:9fA7Ob0pmnwhb644+1+CVWFRbNajQ6iRojtC/QF5bRE=
-google.golang.org/protobuf v1.36.1 h1:yBPeRvTftaleIgM3PZ/WBIZ7XM/eEYAaEyCwvyjq/gk=
-google.golang.org/protobuf v1.36.1/go.mod h1:9fA7Ob0pmnwhb644+1+CVWFRbNajQ6iRojtC/QF5bRE=
+github.com/ralvarezdev/go-flags v0.2.5 h1:SCD/H8qDL5mPHqIuBpHdURgATF3c9rm+OWUNwnV0uKs=
+github.com/ralvarezdev/go-flags v0.2.5/go.mod h1:5uCMKlCrSOon33DPwVQqLVkokl984YDGDT7QbxY8jDU=
+github.com/ralvarezdev/go-logger v0.3.0 h1:KjIA2NEEPsHy8vOpdPYO21fCMEx8XmbIfhRlqd7WjVI=
+github.com/ralvarezdev/go-logger v0.3.0/go.mod h1:v5OvFrkS+wsYNTCVegXWiRhBtcYrQJr4LDMDntvpAos=

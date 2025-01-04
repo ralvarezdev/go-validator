@@ -1,10 +1,11 @@
 package service
 
 import (
-	"fmt"
 	goflagmode "github.com/ralvarezdev/go-flags/mode"
 	govalidatormapper "github.com/ralvarezdev/go-validator/structs/mapper"
-	govalidatorvalidations "github.com/ralvarezdev/go-validator/structs/mapper/validations"
+	govalidatormapperparser "github.com/ralvarezdev/go-validator/structs/mapper/parser"
+	govalidatormappervalidations "github.com/ralvarezdev/go-validator/structs/mapper/validations"
+	govalidatormappervalidator "github.com/ralvarezdev/go-validator/structs/mapper/validator"
 )
 
 type (
@@ -15,37 +16,40 @@ type (
 			request interface{},
 			mapper *govalidatormapper.Mapper,
 		) (
-			govalidatorvalidations.Validations,
+			govalidatormappervalidations.Validations,
 			error,
 		)
-		CheckValidations(validations govalidatorvalidations.Validations) error
+		ParseValidations(validations govalidatormappervalidations.Validations) (
+			interface{},
+			error,
+		)
 	}
 
 	// DefaultService struct
 	DefaultService struct {
 		mode      *goflagmode.Flag
-		generator govalidatorvalidations.Generator
-		validator govalidatorvalidations.Validator
+		parser    govalidatormapperparser.Parser
+		validator govalidatormappervalidator.Validator
 	}
 )
 
 // NewDefaultService creates a new default validator service
 func NewDefaultService(
-	generator govalidatorvalidations.Generator,
-	validator govalidatorvalidations.Validator,
+	parser govalidatormapperparser.Parser,
+	validator govalidatormappervalidator.Validator,
 	mode *goflagmode.Flag,
 ) (*DefaultService, error) {
-	// Check if the generator or the validator is nil
-	if generator == nil {
-		return nil, govalidatorvalidations.ErrNilGenerator
+	// Check if the parser or the validator is nil
+	if parser == nil {
+		return nil, govalidatormapperparser.ErrNilParser
 	}
 	if validator == nil {
-		return nil, govalidatorvalidations.ErrNilValidator
+		return nil, govalidatormappervalidations.ErrNilValidator
 	}
 
 	return &DefaultService{
 		mode:      mode,
-		generator: generator,
+		parser:    parser,
 		validator: validator,
 	}, nil
 }
@@ -59,30 +63,26 @@ func (d *DefaultService) ModeFlag() *goflagmode.Flag {
 func (d *DefaultService) ValidateNilFields(
 	request interface{},
 	mapper *govalidatormapper.Mapper,
-) (govalidatorvalidations.Validations, error) {
+) (govalidatormappervalidations.Validations, error) {
 	return d.validator.ValidateNilFields(
 		request,
 		mapper,
 	)
 }
 
-// CheckValidations checks the validations and returns a pointer to the error message
-func (d *DefaultService) CheckValidations(
-	validations govalidatorvalidations.Validations,
-) error {
-	// Get the error message from the validations if there are any
+// ParseValidations parses the validations
+func (d *DefaultService) ParseValidations(
+	validations govalidatormappervalidations.Validations,
+) (interface{}, error) {
+	// Check if there are any failed validations
 	if !validations.HasFailed() {
-		return nil
+		return nil, nil
 	}
 
-	// Get the validations message
-	message, err := d.generator.Generate(validations)
+	// Get the parsed validations from the validations
+	parsedValidations, err := d.parser.ParseValidations(validations)
 	if err != nil {
-		return ErrFailedToGenerateMessage
+		return nil, ErrFailedToGenerateMessage
 	}
-
-	if message != nil {
-		return fmt.Errorf(ErrValidations, *message)
-	}
-	return ErrNilValidations
+	return parsedValidations, nil
 }
