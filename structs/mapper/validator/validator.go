@@ -4,7 +4,7 @@ import (
 	"fmt"
 	goflagsmode "github.com/ralvarezdev/go-flags/mode"
 	govalidatormapper "github.com/ralvarezdev/go-validator/structs/mapper"
-	govalidatorvalidations "github.com/ralvarezdev/go-validator/structs/mapper/validations"
+	govalidatormappervalidations "github.com/ralvarezdev/go-validator/structs/mapper/validations"
 	"reflect"
 )
 
@@ -12,9 +12,10 @@ type (
 	// Validator interface
 	Validator interface {
 		ValidateNilFields(
+			validations govalidatormappervalidations.Validations,
 			data interface{},
 			mapper *govalidatormapper.Mapper,
-		) (validations govalidatorvalidations.Validations, err error)
+		) (err error)
 	}
 
 	// DefaultValidator struct
@@ -34,19 +35,17 @@ func NewDefaultValidator(
 
 // ValidateNilFields validates if the fields are not nil
 func (d *DefaultValidator) ValidateNilFields(
+	validations govalidatormappervalidations.Validations,
 	data interface{},
 	mapper *govalidatormapper.Mapper,
-) (validations govalidatorvalidations.Validations, err error) {
+) (err error) {
 	// Check if either the data or the struct fields to validate are nil
 	if data == nil {
-		return nil, govalidatorvalidations.ErrNilData
+		return govalidatormappervalidations.ErrNilData
 	}
 	if mapper == nil {
-		return nil, govalidatorvalidations.ErrNilMapper
+		return govalidatormappervalidations.ErrNilMapper
 	}
-
-	// Initialize struct fields validations
-	validations = govalidatorvalidations.NewDefaultValidations()
 
 	// Reflection of data
 	valueReflection := reflect.ValueOf(data)
@@ -62,7 +61,7 @@ func (d *DefaultValidator) ValidateNilFields(
 
 	// Check if the struct has fields to validate
 	if fields == nil && nestedMappers == nil {
-		return nil, nil
+		return nil
 	}
 
 	// Iterate over the fields
@@ -100,7 +99,7 @@ func (d *DefaultValidator) ValidateNilFields(
 				}
 				validations.AddFailedFieldValidationError(
 					validationName,
-					govalidatorvalidations.ErrFieldNotFound,
+					govalidatormappervalidations.ErrFieldNotFound,
 				)
 			}
 			continue
@@ -128,24 +127,28 @@ func (d *DefaultValidator) ValidateNilFields(
 			}
 			validations.AddFailedFieldValidationError(
 				validationName,
-				govalidatorvalidations.ErrFieldNotFound,
+				govalidatormappervalidations.ErrFieldNotFound,
 			)
 			continue
 		}
 
-		// Get the nested struct fields to validate
+		// Get the nested struct mapper
 		fieldNestedMapper, ok := nestedMappers[fieldType.Name]
 		if !ok {
 			continue
 		}
 
+		// Initialize nested struct mapper validations
+		fieldNestedMapperValidations := govalidatormappervalidations.NewDefaultValidations()
+
 		// Validate nested struct
-		fieldNestedMapperValidations, err := d.ValidateNilFields(
+		err = d.ValidateNilFields(
+			fieldNestedMapperValidations,
 			fieldValue.Addr().Interface(), // TEST IF THIS A POINTER OF THE STRUCT
 			fieldNestedMapper,
 		)
 		if err != nil {
-			return nil, err
+			return err
 		}
 
 		// Add nested struct validations to the struct fields validations
@@ -155,5 +158,5 @@ func (d *DefaultValidator) ValidateNilFields(
 		)
 	}
 
-	return validations, nil
+	return nil
 }

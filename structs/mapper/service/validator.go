@@ -13,21 +13,16 @@ type (
 	Service interface {
 		ModeFlag() *goflagmode.Flag
 		ValidateNilFields(
+			validations govalidatormappervalidations.Validations,
 			request interface{},
 			mapper *govalidatormapper.Mapper,
-		) (
-			govalidatormappervalidations.Validations,
-			error,
-		)
+		) error
 		ParseValidations(validations govalidatormappervalidations.Validations) (
 			interface{},
 			error,
 		)
 		RunAndParseValidations(
-			getValidationsFn func() (
-				govalidatormappervalidations.Validations,
-				error,
-			),
+			getValidationsFn func(govalidatormappervalidations.Validations) error,
 		) (interface{}, error)
 	}
 
@@ -67,10 +62,12 @@ func (d *DefaultService) ModeFlag() *goflagmode.Flag {
 
 // ValidateNilFields validates the nil fields
 func (d *DefaultService) ValidateNilFields(
+	validations govalidatormappervalidations.Validations,
 	request interface{},
 	mapper *govalidatormapper.Mapper,
-) (govalidatormappervalidations.Validations, error) {
+) error {
 	return d.validator.ValidateNilFields(
+		validations,
 		request,
 		mapper,
 	)
@@ -95,10 +92,13 @@ func (d *DefaultService) ParseValidations(
 
 // RunAndParseValidations runs and parses the validations
 func (d *DefaultService) RunAndParseValidations(
-	getValidationsFn func() (govalidatormappervalidations.Validations, error),
+	getValidationsFn func(govalidatormappervalidations.Validations) error,
 ) (interface{}, error) {
+	// Initialize struct fields validations
+	validations := govalidatormappervalidations.NewDefaultValidations()
+
 	// Get the validations
-	validations, err := getValidationsFn()
+	err := getValidationsFn(validations)
 	if err != nil {
 		return nil, err
 	}
