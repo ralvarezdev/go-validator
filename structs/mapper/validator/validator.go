@@ -13,7 +13,6 @@ type (
 	Validator interface {
 		ValidateNilFields(
 			validations govalidatormappervalidations.Validations,
-			newValidationsFn func() govalidatormappervalidations.Validations,
 			data interface{},
 			mapper *govalidatormapper.Mapper,
 		) (err error)
@@ -21,23 +20,25 @@ type (
 
 	// DefaultValidator struct
 	DefaultValidator struct {
-		mode *goflagsmode.Flag
+		mode             *goflagsmode.Flag
+		newValidationsFn func() govalidatormappervalidations.Validations
 	}
 )
 
 // NewDefaultValidator creates a new default mapper validator
 func NewDefaultValidator(
 	mode *goflagsmode.Flag,
+	newValidationsFn func() govalidatormappervalidations.Validations,
 ) *DefaultValidator {
 	return &DefaultValidator{
-		mode: mode,
+		mode:             mode,
+		newValidationsFn: newValidationsFn,
 	}
 }
 
 // ValidateNilFields validates if the fields are not nil
 func (d *DefaultValidator) ValidateNilFields(
 	validations govalidatormappervalidations.Validations,
-	newValidationsFn func() govalidatormappervalidations.Validations,
 	data interface{},
 	mapper *govalidatormapper.Mapper,
 ) (err error) {
@@ -144,12 +145,11 @@ func (d *DefaultValidator) ValidateNilFields(
 		}
 
 		// Initialize nested struct mapper validations
-		fieldNestedMapperValidations := newValidationsFn()
+		fieldNestedMapperValidations := d.newValidationsFn()
 
 		// Validate nested struct
 		err = d.ValidateNilFields(
 			fieldNestedMapperValidations,
-			newValidationsFn,
 			fieldValue.Addr().Interface(), // TEST IF THIS A POINTER OF THE STRUCT
 			fieldNestedMapper,
 		)

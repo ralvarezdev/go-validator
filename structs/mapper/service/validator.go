@@ -68,7 +68,6 @@ func (d *DefaultService) ValidateNilFields(
 ) error {
 	return d.validator.ValidateNilFields(
 		validations,
-		govalidatormappervalidations.NewDefaultValidations,
 		request,
 		mapper,
 	)

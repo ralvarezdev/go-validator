@@ -23,7 +23,9 @@ type (
 	}
 
 	// Parser is a struct that holds the JSON parser
-	Parser struct{}
+	Parser struct {
+		newParsedValidationsFn func() ParsedValidations
+	}
 )
 
 // NewDefaultParsedValidations creates a new DefaultParsedValidations struct
@@ -63,15 +65,14 @@ func (d *DefaultParsedValidations) AddErrors(errors *[]error) {
 }
 
 // NewParser creates a new Parser struct
-func NewParser() *Parser {
-	return &Parser{}
+func NewParser(newParsedValidationsFn func() ParsedValidations) *Parser {
+	return &Parser{newParsedValidationsFn: newParsedValidationsFn}
 }
 
 // GenerateParsedValidations returns a
-func (d *Parser) GenerateParsedValidations(
+func (p *Parser) GenerateParsedValidations(
 	validations govalidatormappervalidations.Validations,
 	parsedValidations ParsedValidations,
-	newValidationsFn func() ParsedValidations,
 ) error {
 	// Check if the validations or parsed validations are nil
 	if validations == nil {
@@ -99,7 +100,7 @@ func (d *Parser) GenerateParsedValidations(
 		}
 
 		// Initialize the JSON parsed validations
-		nestedParsedValidations = NewDefaultParsedValidations()
+		nestedParsedValidations = p.newParsedValidationsFn()
 
 		// Set the fields errors if there are any
 		nestedParsedValidations.AddErrors(&fieldErrors)
@@ -119,7 +120,7 @@ func (d *Parser) GenerateParsedValidations(
 		// Check if the given field is already in the JSON parsed validations
 		nestedParsedValidations = parsedValidations.GetFieldParsedValidations(field)
 		if nestedParsedValidations == nil {
-			nestedParsedValidations = NewDefaultParsedValidations()
+			nestedParsedValidations = p.newParsedValidationsFn()
 			parsedValidations.AddFieldParsedValidations(
 				field,
 				nestedParsedValidations,
@@ -127,10 +128,9 @@ func (d *Parser) GenerateParsedValidations(
 		}
 
 		// Generate the nested JSON parsed validations
-		err := d.GenerateParsedValidations(
+		err := p.GenerateParsedValidations(
 			nestedFieldValidations,
 			nestedParsedValidations,
-			NewDefaultParsedValidations,
 		)
 		if err != nil {
 			return err
@@ -140,18 +140,17 @@ func (d *Parser) GenerateParsedValidations(
 }
 
 // ParseValidations parses the validations into JSON
-func (d *Parser) ParseValidations(validations govalidatormappervalidations.Validations) (
+func (p *Parser) ParseValidations(validations govalidatormappervalidations.Validations) (
 	interface{},
 	error,
 ) {
 	// Initialize the parsed validations
-	parsedValidations := NewDefaultParsedValidations()
+	parsedValidations := p.newParsedValidationsFn()
 
 	// Generate the JSON parsed validations
-	err := d.GenerateParsedValidations(
+	err := p.GenerateParsedValidations(
 		validations,
 		parsedValidations,
-		NewDefaultParsedValidations,
 	)
 	if err != nil {
 		return nil, err

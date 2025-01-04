@@ -25,7 +25,7 @@ func NewParser() *Parser {
 }
 
 // GetLevelPadding returns the padding for the level
-func (e *Parser) GetLevelPadding(level int) string {
+func (p *Parser) GetLevelPadding(level int) string {
 	var padding strings.Builder
 	for i := 0; i < level; i++ {
 		padding.WriteString("\t")
@@ -34,7 +34,7 @@ func (e *Parser) GetLevelPadding(level int) string {
 }
 
 // GenerateValidationsMessage returns a formatted error message for Parser
-func (e *Parser) GenerateValidationsMessage(
+func (p *Parser) GenerateValidationsMessage(
 	validations govalidatormappervalidations.Validations,
 	level int,
 ) (*string, error) {
@@ -49,10 +49,10 @@ func (e *Parser) GenerateValidationsMessage(
 	}
 
 	// Get the padding for initial level, the fields, their properties and errors
-	basePadding := e.GetLevelPadding(level)
-	fieldPadding := e.GetLevelPadding(level + 1)
-	fieldPropertiesPadding := e.GetLevelPadding(level + 2)
-	fieldErrorsPadding := e.GetLevelPadding(level + 3)
+	basePadding := p.GetLevelPadding(level)
+	fieldPadding := p.GetLevelPadding(level + 1)
+	fieldPropertiesPadding := p.GetLevelPadding(level + 2)
+	fieldErrorsPadding := p.GetLevelPadding(level + 3)
 
 	// Create the message and add the fields flag
 	var message strings.Builder
@@ -126,7 +126,7 @@ func (e *Parser) GenerateValidationsMessage(
 			message.WriteString("]\n")
 		} else {
 			iteratedNestedFieldsValidationsNumber++
-			nestedFieldValidationsMessage, err := e.GenerateValidationsMessage(
+			nestedFieldValidationsMessage, err := p.GenerateValidationsMessage(
 				nestedFieldValidations,
 				level+1,
 			)
@@ -158,7 +158,7 @@ func (e *Parser) GenerateValidationsMessage(
 			}
 
 			iteratedNestedFieldsValidationsNumber++
-			nestedFieldValidationsMessage, err := e.GenerateValidationsMessage(
+			nestedFieldValidationsMessage, err := p.GenerateValidationsMessage(
 				nestedFieldValidations,
 				level+1,
 			)
@@ -196,12 +196,12 @@ func (e *Parser) GenerateValidationsMessage(
 }
 
 // ParseValidations parses the validations and returns the validations message
-func (e *Parser) ParseValidations(validations govalidatormappervalidations.Validations) (
+func (p *Parser) ParseValidations(validations govalidatormappervalidations.Validations) (
 	interface{},
 	error,
 ) {
 	// Return the failed validations message
-	parsedValidations, err := e.GenerateValidationsMessage(validations, 0)
+	parsedValidations, err := p.GenerateValidationsMessage(validations, 0)
 	if err != nil {
 		return nil, err
 	}
