@@ -13,6 +13,7 @@ type (
 	Validator interface {
 		ValidateNilFields(
 			validations govalidatormappervalidations.Validations,
+			newValidationsFn func() govalidatormappervalidations.Validations,
 			data interface{},
 			mapper *govalidatormapper.Mapper,
 		) (err error)
@@ -36,15 +37,19 @@ func NewDefaultValidator(
 // ValidateNilFields validates if the fields are not nil
 func (d *DefaultValidator) ValidateNilFields(
 	validations govalidatormappervalidations.Validations,
+	newValidationsFn func() govalidatormappervalidations.Validations,
 	data interface{},
 	mapper *govalidatormapper.Mapper,
 ) (err error) {
-	// Check if either the data or the struct fields to validate are nil
+	// Check if either the validations, data or the struct fields to validate are nil
+	if validations == nil {
+		return govalidatormapper.ErrNilValidations
+	}
 	if data == nil {
-		return govalidatormappervalidations.ErrNilData
+		return ErrNilData
 	}
 	if mapper == nil {
-		return govalidatormappervalidations.ErrNilMapper
+		return ErrNilMapper
 	}
 
 	// Reflection of data
@@ -97,7 +102,7 @@ func (d *DefaultValidator) ValidateNilFields(
 				if d.mode != nil && d.mode.IsDebug() {
 					fmt.Printf("field is uninitialized: %v\n", fieldType.Name)
 				}
-				validations.AddFailedFieldValidationError(
+				validations.AddFieldValidationError(
 					validationName,
 					govalidatormappervalidations.ErrFieldNotFound,
 				)
@@ -125,7 +130,7 @@ func (d *DefaultValidator) ValidateNilFields(
 			if d.mode != nil && d.mode.IsDev() {
 				fmt.Printf("field is uninitialized: %v\n", fieldType.Name)
 			}
-			validations.AddFailedFieldValidationError(
+			validations.AddFieldValidationError(
 				validationName,
 				govalidatormappervalidations.ErrFieldNotFound,
 			)
@@ -139,11 +144,12 @@ func (d *DefaultValidator) ValidateNilFields(
 		}
 
 		// Initialize nested struct mapper validations
-		fieldNestedMapperValidations := govalidatormappervalidations.NewDefaultValidations()
+		fieldNestedMapperValidations := newValidationsFn()
 
 		// Validate nested struct
 		err = d.ValidateNilFields(
 			fieldNestedMapperValidations,
+			newValidationsFn,
 			fieldValue.Addr().Interface(), // TEST IF THIS A POINTER OF THE STRUCT
 			fieldNestedMapper,
 		)

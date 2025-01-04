@@ -45,7 +45,7 @@ func NewDefaultService(
 		return nil, govalidatormapperparser.ErrNilParser
 	}
 	if validator == nil {
-		return nil, govalidatormappervalidations.ErrNilValidator
+		return nil, govalidatormappervalidator.ErrNilValidator
 	}
 
 	return &DefaultService{
@@ -68,6 +68,7 @@ func (d *DefaultService) ValidateNilFields(
 ) error {
 	return d.validator.ValidateNilFields(
 		validations,
+		govalidatormappervalidations.NewDefaultValidations,
 		request,
 		mapper,
 	)
