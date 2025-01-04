@@ -23,6 +23,12 @@ type (
 			interface{},
 			error,
 		)
+		RunAndParseValidations(
+			getValidationsFn func() (
+				govalidatormappervalidations.Validations,
+				error,
+			),
+		) (interface{}, error)
 	}
 
 	// DefaultService struct
@@ -89,10 +95,10 @@ func (d *DefaultService) ParseValidations(
 
 // RunAndParseValidations runs and parses the validations
 func (d *DefaultService) RunAndParseValidations(
-	getValidations func() (govalidatormappervalidations.Validations, error),
+	getValidationsFn func() (govalidatormappervalidations.Validations, error),
 ) (interface{}, error) {
 	// Get the validations
-	validations, err := getValidations()
+	validations, err := getValidationsFn()
 	if err != nil {
 		return nil, err
 	}
