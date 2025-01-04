@@ -5,7 +5,5 @@ import (
 )
 
 var (
-	ErrValidations             = "validations error: %v"
-	ErrFailedToGenerateMessage = errors.New("failed to generate message")
-	ErrNilService              = errors.New("validator service cannot be nil")
+	ErrNilService = errors.New("mapper validator service cannot be nil")
 )

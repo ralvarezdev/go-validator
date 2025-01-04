@@ -82,7 +82,21 @@ func (d *DefaultService) ParseValidations(
 	// Get the parsed validations from the validations
 	parsedValidations, err := d.parser.ParseValidations(validations)
 	if err != nil {
-		return nil, ErrFailedToGenerateMessage
+		return nil, err
 	}
 	return parsedValidations, nil
+}
+
+// RunAndParseValidations runs and parses the validations
+func (d *DefaultService) RunAndParseValidations(
+	getValidations func() (govalidatormappervalidations.Validations, error),
+) (interface{}, error) {
+	// Get the validations
+	validations, err := getValidations()
+	if err != nil {
+		return nil, err
+	}
+
+	// Parse the validations
+	return d.ParseValidations(validations)
 }
