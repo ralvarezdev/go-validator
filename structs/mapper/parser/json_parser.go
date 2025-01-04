@@ -8,7 +8,7 @@ type (
 	// JSONParsedValidations is a struct that holds the JSON parsed validations
 	JSONParsedValidations struct {
 		Fields *map[string]*JSONParsedValidations `json:"$fields,omitempty"`
-		Errors *[]error                           `json:"$errors,omitempty"`
+		Errors *[]string                          `json:"$errors,omitempty"`
 	}
 
 	// JSONParser is a struct that holds the JSON parser
@@ -42,9 +42,12 @@ func (j *JSONParsedValidations) GetFieldParsedValidations(field string) *JSONPar
 // AddErrors adds errors to the JSON parsed validations
 func (j *JSONParsedValidations) AddErrors(errors *[]error) {
 	if j.Errors == nil {
-		j.Errors = errors
-	} else {
-		*j.Errors = append(*j.Errors, *errors...)
+		j.Errors = &[]string{}
+	}
+
+	// Iterate over all errors and add them to the JSON parsed validations
+	for _, err := range *errors {
+		*j.Errors = append(*j.Errors, err.Error())
 	}
 }
 
