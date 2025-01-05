@@ -1,8 +1,8 @@
 package json
 
 import (
+	govalidatormapper "github.com/ralvarezdev/go-validator/structs/mapper"
 	govalidatormappervalidations "github.com/ralvarezdev/go-validator/structs/mapper/validations"
-	govalidatormapper "github.com/ralvarezdev/go-validator/structs/mapper/validator"
 )
 
 type (
