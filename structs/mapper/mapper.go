@@ -2,7 +2,6 @@ package mapper
 
 import (
 	"fmt"
-	goflagsmode "github.com/ralvarezdev/go-flags/mode"
 	"reflect"
 	"strings"
 )
@@ -33,26 +32,26 @@ type (
 
 	// ProtobufGenerator is a generator for Protobuf mappers
 	ProtobufGenerator struct {
-		mode *goflagsmode.Flag
+		logger *Logger
 	}
 
 	// JSONGenerator is a generator for JSON mappers
 	JSONGenerator struct {
-		mode *goflagsmode.Flag
+		logger *Logger
 	}
 )
 
 // NewProtobufGenerator creates a new Protobuf generator
-func NewProtobufGenerator(mode *goflagsmode.Flag) *ProtobufGenerator {
+func NewProtobufGenerator(logger *Logger) *ProtobufGenerator {
 	return &ProtobufGenerator{
-		mode: mode,
+		logger: logger,
 	}
 }
 
 // NewJSONGenerator creates a new JSON generator
-func NewJSONGenerator(mode *goflagsmode.Flag) *JSONGenerator {
+func NewJSONGenerator(logger *Logger) *JSONGenerator {
 	return &JSONGenerator{
-		mode: mode,
+		logger: logger,
 	}
 }
 
@@ -85,10 +84,10 @@ func (p *ProtobufGenerator) NewMapper(structInstance interface{}) (
 			continue
 		}
 
-		// Print field on debug mode
+		// Print field
 		fieldType := field.Type
-		if p.mode != nil && p.mode.IsDebug() {
-			fmt.Printf("field '%v' type: %v\n", field.Name, fieldType)
+		if p.logger != nil {
+			p.logger.PrintField(field.Name, fieldType)
 		}
 
 		// Check if the field is a pointer
@@ -183,10 +182,10 @@ func (j *JSONGenerator) NewMapper(structInstance interface{}) (
 		// Get the field type through reflection
 		field := typeReflection.Field(i)
 
-		// Print field on debug mode
+		// Print field
 		fieldType := field.Type
-		if j.mode != nil && j.mode.IsDebug() {
-			fmt.Printf("field '%v' type: %v\n", field.Name, fieldType)
+		if j.logger != nil {
+			j.logger.PrintField(field.Name, fieldType)
 		}
 
 		// Get the JSON tag of the field

@@ -1,7 +1,6 @@
 package service
 
 import (
-	goflagmode "github.com/ralvarezdev/go-flags/mode"
 	govalidatormapper "github.com/ralvarezdev/go-validator/structs/mapper"
 	govalidatormapperparser "github.com/ralvarezdev/go-validator/structs/mapper/parser"
 	govalidatormappervalidations "github.com/ralvarezdev/go-validator/structs/mapper/validations"
@@ -11,7 +10,6 @@ import (
 type (
 	// Service interface for the validator service
 	Service interface {
-		ModeFlag() *goflagmode.Flag
 		ValidateNilFields(
 			validations govalidatormappervalidations.Validations,
 			request interface{},
@@ -28,7 +26,6 @@ type (
 
 	// DefaultService struct
 	DefaultService struct {
-		mode      *goflagmode.Flag
 		parser    govalidatormapperparser.Parser
 		validator govalidatormappervalidator.Validator
 	}
@@ -38,7 +35,6 @@ type (
 func NewDefaultService(
 	parser govalidatormapperparser.Parser,
 	validator govalidatormappervalidator.Validator,
-	mode *goflagmode.Flag,
 ) (*DefaultService, error) {
 	// Check if the parser or the validator is nil
 	if parser == nil {
@@ -49,15 +45,9 @@ func NewDefaultService(
 	}
 
 	return &DefaultService{
-		mode:      mode,
 		parser:    parser,
 		validator: validator,
 	}, nil
-}
-
-// ModeFlag returns the mode flag
-func (d *DefaultService) ModeFlag() *goflagmode.Flag {
-	return d.mode
 }
 
 // ValidateNilFields validates the nil fields

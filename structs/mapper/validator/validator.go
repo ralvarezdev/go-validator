@@ -1,8 +1,6 @@
 package validator
 
 import (
-	"fmt"
-	goflagsmode "github.com/ralvarezdev/go-flags/mode"
 	govalidatormapper "github.com/ralvarezdev/go-validator/structs/mapper"
 	govalidatormappervalidations "github.com/ralvarezdev/go-validator/structs/mapper/validations"
 	"reflect"
@@ -20,19 +18,19 @@ type (
 
 	// DefaultValidator struct
 	DefaultValidator struct {
-		mode             *goflagsmode.Flag
 		newValidationsFn func() govalidatormappervalidations.Validations
+		logger           *Logger
 	}
 )
 
 // NewDefaultValidator creates a new default mapper validator
 func NewDefaultValidator(
-	mode *goflagsmode.Flag,
 	newValidationsFn func() govalidatormappervalidations.Validations,
+	logger *Logger,
 ) *DefaultValidator {
 	return &DefaultValidator{
-		mode:             mode,
 		newValidationsFn: newValidationsFn,
+		logger:           logger,
 	}
 }
 
@@ -76,14 +74,9 @@ func (d *DefaultValidator) ValidateNilFields(
 		fieldValue := valueReflection.Field(i)
 		fieldType := typeReflection.Field(i)
 
-		// Print field on debug mode
-		if d.mode != nil && d.mode.IsDebug() {
-			fmt.Printf(
-				"field '%v' of type '%v' value: %v\n",
-				fieldType.Name,
-				fieldType.Type,
-				fieldValue,
-			)
+		// Print field
+		if d.logger != nil {
+			d.logger.PrintField(fieldType.Name, fieldType.Type, fieldValue)
 		}
 
 		// Check if the field is a pointer
@@ -99,10 +92,10 @@ func (d *DefaultValidator) ValidateNilFields(
 
 			// Check if the field is uninitialized
 			if fieldValue.IsZero() {
-				// Print error on debug mode
-				if d.mode != nil && d.mode.IsDebug() {
-					fmt.Printf("field is uninitialized: %v\n", fieldType.Name)
+				if d.logger != nil {
+					d.logger.UninitializedField(fieldType.Name)
 				}
+
 				validations.AddFieldValidationError(
 					validationName,
 					govalidatormappervalidations.ErrFieldNotFound,
@@ -127,10 +120,10 @@ func (d *DefaultValidator) ValidateNilFields(
 
 		// Check if the field is initialized
 		if fieldValue.IsNil() {
-			// Print error on dev mode
-			if d.mode != nil && d.mode.IsDev() {
-				fmt.Printf("field is uninitialized: %v\n", fieldType.Name)
+			if d.logger != nil {
+				d.logger.UninitializedField(fieldType.Name)
 			}
+
 			validations.AddFieldValidationError(
 				validationName,
 				govalidatormappervalidations.ErrFieldNotFound,
