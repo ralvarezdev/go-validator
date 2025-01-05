@@ -87,7 +87,7 @@ func (p *ProtobufGenerator) NewMapper(structInstance interface{}) (
 		// Print field
 		fieldType := field.Type
 		if p.logger != nil {
-			p.logger.PrintField(field.Name, fieldType)
+			p.logger.PrintField(typeReflection.Name(), field.Name, fieldType)
 		}
 
 		// Check if the field is a pointer
@@ -185,7 +185,7 @@ func (j *JSONGenerator) NewMapper(structInstance interface{}) (
 		// Print field
 		fieldType := field.Type
 		if j.logger != nil {
-			j.logger.PrintField(field.Name, fieldType)
+			j.logger.PrintField(typeReflection.Name(), field.Name, fieldType)
 		}
 
 		// Get the JSON tag of the field

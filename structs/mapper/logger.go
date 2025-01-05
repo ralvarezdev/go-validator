@@ -24,8 +24,13 @@ func NewLogger(header string, modeLogger gologgermode.Logger) (*Logger, error) {
 }
 
 // PrintField prints a field
-func (l *Logger) PrintField(fieldName string, fieldType reflect.Type) {
+func (l *Logger) PrintField(
+	structName string,
+	fieldName string,
+	fieldType reflect.Type,
+) {
 	l.logger.Debug(
+		fmt.Sprintf("detected field on '%v'", structName),
 		fmt.Sprintf("field '%v'", fieldName),
 		fmt.Sprintf("type: '%v'", fieldType),
 	)
