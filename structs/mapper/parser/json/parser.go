@@ -19,7 +19,7 @@ type (
 
 	// FlattenedParsedValidations is the struct for the flattened JSON parsed validations
 	FlattenedParsedValidations struct {
-		fields map[string]interface{}
+		fields *map[string]interface{}
 	}
 
 	// Parser is a struct that holds the JSON parser
@@ -150,16 +150,16 @@ func (f *FlattenedParsedValidations) AddFieldParsedValidations(
 	// Check if the fields are nil
 	if f.fields == nil {
 		fields := make(map[string]interface{})
-		f.fields = fields
+		f.fields = &fields
 	}
 
 	// Check if the field name is already in the flattened JSON parsed validations
-	if _, ok := f.fields[fieldName]; ok {
+	if _, ok := (*f.fields)[fieldName]; ok {
 		return fmt.Errorf(ErrNilFieldNameAlreadyParsed, fieldName)
 	}
 
 	// Add the field parsed validations to the flattened JSON parsed validations
-	f.fields[fieldName] = fieldParsedValidations.GetErrors()
+	(*f.fields)[fieldName] = fieldParsedValidations.GetErrors()
 	return nil
 }
 
@@ -176,11 +176,11 @@ func (f *FlattenedParsedValidations) AddNestedStructParsedValidations(
 	// Check if the fields are nil
 	if f.fields == nil {
 		fields := make(map[string]interface{})
-		f.fields = fields
+		f.fields = &fields
 	}
 
 	// Check if the struct name is already in the flattened JSON parsed validations
-	if _, ok := f.fields[structName]; ok {
+	if _, ok := (*f.fields)[structName]; ok {
 		return fmt.Errorf(ErrNilFieldNameAlreadyParsed, structName)
 	}
 
@@ -192,7 +192,7 @@ func (f *FlattenedParsedValidations) AddNestedStructParsedValidations(
 	}
 
 	// Add the struct parsed validations to the flattened JSON parsed validations
-	f.fields[structName] = structFlattenedParsedValidations.GetFields()
+	(*f.fields)[structName] = structFlattenedParsedValidations.GetFields()
 	return nil
 }
 
@@ -212,19 +212,19 @@ func (f *FlattenedParsedValidations) AddRootStructParsedValidations(
 
 	// Initialize the fields
 	fields := make(map[string]interface{})
-	f.fields = fields
+	f.fields = &fields
 
 	// Add the struct parsed validations fields
 	fieldsParsedValidations := structParsedValidations.GetFieldsParsedValidations()
 	if fieldsParsedValidations != nil {
 		for fieldName, fieldParsedValidations := range *fieldsParsedValidations {
 			// Check if the field name is already in the flattened JSON parsed validations
-			if _, ok := f.fields[fieldName]; ok {
+			if _, ok := (*f.fields)[fieldName]; ok {
 				return fmt.Errorf(ErrNilFieldNameAlreadyParsed, fieldName)
 			}
 
 			// Add the field parsed validations
-			f.fields[fieldName] = fieldParsedValidations.GetErrors()
+			(*f.fields)[fieldName] = fieldParsedValidations.GetErrors()
 		}
 	}
 
@@ -233,7 +233,7 @@ func (f *FlattenedParsedValidations) AddRootStructParsedValidations(
 	if nestedStructsParsedValidations != nil {
 		for nestedStructName, nestedStructParsedValidations := range *nestedStructsParsedValidations {
 			// Check if the nested struct name is already in the flattened JSON parsed validations
-			if _, ok := f.fields[nestedStructName]; ok {
+			if _, ok := (*f.fields)[nestedStructName]; ok {
 				return fmt.Errorf(
 					ErrNilFieldNameAlreadyParsed,
 					nestedStructName,
@@ -251,7 +251,7 @@ func (f *FlattenedParsedValidations) AddRootStructParsedValidations(
 			}
 
 			// Add the nested struct parsed validations
-			f.fields[nestedStructName] = nestedStructFlattenedParsedValidations.GetFields()
+			(*f.fields)[nestedStructName] = nestedStructFlattenedParsedValidations.GetFields()
 		}
 	}
 
@@ -259,7 +259,7 @@ func (f *FlattenedParsedValidations) AddRootStructParsedValidations(
 }
 
 // GetFields returns the fields from the flattened JSON parsed validations
-func (f *FlattenedParsedValidations) GetFields() map[string]interface{} {
+func (f *FlattenedParsedValidations) GetFields() *map[string]interface{} {
 	return f.fields
 }
 
