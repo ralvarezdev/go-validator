@@ -78,7 +78,8 @@ func (s *StructValidations) AddFieldValidationError(
 	// Check if the field name is already in the map
 	fieldValidations, ok := (*s.fieldsValidations)[fieldName]
 	if !ok {
-		(*s.fieldsValidations)[fieldName] = NewFieldValidations()
+		fieldValidations = NewFieldValidations()
+		(*s.fieldsValidations)[fieldName] = fieldValidations
 	}
 
 	// Append the validation error to the field name
