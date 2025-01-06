@@ -5,5 +5,6 @@ import (
 )
 
 var (
-	ErrFieldNotFound = errors.New("field not found")
+	ErrNilStructValidations = errors.New("struct validations is nil")
+	ErrNilFieldValidations  = errors.New("field validations is nil")
 )

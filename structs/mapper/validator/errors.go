@@ -5,7 +5,8 @@ import (
 )
 
 var (
-	ErrNilData      = errors.New("data cannot be nil")
-	ErrNilMapper    = errors.New("mapper cannot be nil")
-	ErrNilValidator = errors.New("mapper validator cannot be nil")
+	ErrNilData       = errors.New("data cannot be nil")
+	ErrNilMapper     = errors.New("mapper cannot be nil")
+	ErrNilValidator  = errors.New("mapper validator cannot be nil")
+	ErrRequiredField = "%s is required"
 )

@@ -1,90 +1,153 @@
 package validations
 
 type (
-	// Validations interface is an interface for struct fields validations
-	Validations interface {
-		HasFailed() bool
-		AddFieldValidationError(
-			fieldName string,
-			validationError error,
-		)
-		SetNestedFieldsValidations(
-			fieldName string,
-			nestedValidations Validations,
-		)
-		GetFieldsValidations() *map[string][]error
-		GetNestedFieldsValidations() *map[string]Validations
+	// StructValidations is a struct that holds the struct validations for the generated validations of a struct
+	StructValidations struct {
+		fieldsValidations        *map[string]*FieldValidations
+		nestedStructsValidations *map[string]*StructValidations
 	}
 
-	// DefaultValidations is a struct that holds the error messages for failed validations of a struct
-	DefaultValidations struct {
-		FieldsValidations       *map[string][]error
-		NestedFieldsValidations *map[string]Validations
+	// FieldValidations is a struct that holds the field validations for the generated validations of a struct
+	FieldValidations struct {
+		errors *[]error
 	}
 )
 
-// NewDefaultValidations creates a new DefaultValidations struct
-func NewDefaultValidations() Validations {
-	// Initialize the struct fields validations
-	fieldsValidations := make(map[string][]error)
-	nestedFieldsValidations := make(map[string]Validations)
-
-	return &DefaultValidations{
-		FieldsValidations:       &fieldsValidations,
-		NestedFieldsValidations: &nestedFieldsValidations,
-	}
+// NewStructValidations creates a new StructValidations struct
+func NewStructValidations() *StructValidations {
+	return &StructValidations{}
 }
 
 // HasFailed returns true if there are failed validations
-func (d *DefaultValidations) HasFailed() bool {
-	// Check if there's a nested failed validations
-	if d.NestedFieldsValidations != nil {
-		for _, nestedValidation := range *d.NestedFieldsValidations {
-			if nestedValidation.HasFailed() {
+func (s *StructValidations) HasFailed() bool {
+	// Check if there's a nested struct with failed validations
+	if s.nestedStructsValidations != nil {
+		for _, nestedStructValidation := range *s.nestedStructsValidations {
+			if nestedStructValidation.HasFailed() {
 				return true
 			}
 		}
 	}
-
-	// Check if there are failed fields validations
-	if d.FieldsValidations == nil {
-		return false
+	// Check if there is a field with failed fields validations
+	if s.fieldsValidations != nil {
+		for _, fieldValidation := range *s.fieldsValidations {
+			if fieldValidation.HasFailed() {
+				return true
+			}
+		}
 	}
-	return len(*d.FieldsValidations) > 0
+	return false
 }
 
-// AddFieldValidationError adds a field validation error to the struct
-func (d *DefaultValidations) AddFieldValidationError(
+// AddFieldValidations sets the fields validations to the struct
+func (s *StructValidations) AddFieldValidations(
+	fieldName string,
+	fieldValidations *FieldValidations,
+) {
+	// Check if the field name is empty or the field validations is nil
+	if fieldName == "" || fieldValidations == nil {
+		return
+	}
+
+	// Check if the fields validations are nil
+	if s.fieldsValidations == nil {
+		fieldsValidations := make(map[string]*FieldValidations)
+		s.fieldsValidations = &fieldsValidations
+	}
+
+	// Add the field validations to the struct
+	(*s.fieldsValidations)[fieldName] = fieldValidations
+}
+
+// AddFieldValidationError adds a validation error to the field
+func (s *StructValidations) AddFieldValidationError(
 	fieldName string,
 	validationError error,
 ) {
-	// Check if the field name is already in the map
-	fieldsValidations := *d.FieldsValidations
-	if _, ok := fieldsValidations[fieldName]; !ok {
-		fieldsValidations[fieldName] = []error{validationError}
-	} else {
-		// Append the validation error to the field name
-		fieldsValidations[fieldName] = append(
-			fieldsValidations[fieldName],
-			validationError,
-		)
+	// Check if the field name is empty or the validation error is nil
+	if fieldName == "" || validationError == nil {
+		return
 	}
+
+	// Check if the fields validations are nil
+	if s.fieldsValidations == nil {
+		fieldsValidations := make(map[string]*FieldValidations)
+		s.fieldsValidations = &fieldsValidations
+	}
+
+	// Check if the field name is already in the map
+	fieldValidations, ok := (*s.fieldsValidations)[fieldName]
+	if !ok {
+		(*s.fieldsValidations)[fieldName] = NewFieldValidations()
+	}
+
+	// Append the validation error to the field name
+	fieldValidations.AddValidationError(validationError)
 }
 
-// SetNestedFieldsValidations sets the nested struct fields validations to the struct
-func (d *DefaultValidations) SetNestedFieldsValidations(
+// AddNestedStructValidations sets the nested struct fields validations to the struct
+func (s *StructValidations) AddNestedStructValidations(
 	fieldName string,
-	nestedValidations Validations,
+	nestedStructValidations *StructValidations,
 ) {
-	(*d.NestedFieldsValidations)[fieldName] = nestedValidations
+	// Check if the nested struct validations is nil
+	if nestedStructValidations == nil {
+		return
+	}
+
+	// Check if the nested structs validations are nil
+	if s.nestedStructsValidations == nil {
+		nestedStructsValidations := make(map[string]*StructValidations)
+		s.nestedStructsValidations = &nestedStructsValidations
+	}
+
+	// Add the nested struct validations to the struct
+	(*s.nestedStructsValidations)[fieldName] = nestedStructValidations
 }
 
-// GetFieldsValidations returns the fields validations errors
-func (d *DefaultValidations) GetFieldsValidations() *map[string][]error {
-	return d.FieldsValidations
+// GetFieldsValidations returns the fields validations
+func (s *StructValidations) GetFieldsValidations() *map[string]*FieldValidations {
+	return s.fieldsValidations
 }
 
-// GetNestedFieldsValidations returns the nested struct fields validations
-func (d *DefaultValidations) GetNestedFieldsValidations() *map[string]Validations {
-	return d.NestedFieldsValidations
+// GetNestedStructsValidations returns the nested structs validations
+func (s *StructValidations) GetNestedStructsValidations() *map[string]*StructValidations {
+	return s.nestedStructsValidations
+}
+
+// NewFieldValidations creates a new FieldValidations struct
+func NewFieldValidations() *FieldValidations {
+	return &FieldValidations{}
+}
+
+// HasFailed returns true if there are failed validations
+func (f *FieldValidations) HasFailed() bool {
+	if f.errors == nil {
+		return false
+	}
+	return len(*f.errors) > 0
+}
+
+// AddValidationError adds a validation error to the field
+func (f *FieldValidations) AddValidationError(
+	validationError error,
+) {
+	// Check if the validation error is nil
+	if validationError == nil {
+		return
+	}
+
+	// Check if the errors are nil
+	if f.errors == nil {
+		errors := make([]error, 0)
+		f.errors = &errors
+	}
+
+	// Add the validation error to the field
+	*f.errors = append(*f.errors, validationError)
+}
+
+// GetErrors returns the field errors
+func (f *FieldValidations) GetErrors() *[]error {
+	return f.errors
 }

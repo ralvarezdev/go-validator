@@ -21,7 +21,10 @@ const (
 type (
 	// Mapper is a map of fields to validate from a struct
 	Mapper struct {
-		Fields        map[string]string // Key is the field name and value is the name used in the validation error
+		// Fields key is the field name and value is the name used in the validation error
+		Fields map[string]string
+
+		// NestedMappers key is the field name of the nested struct and value is the nested mapper
 		NestedMappers map[string]*Mapper
 	}
 

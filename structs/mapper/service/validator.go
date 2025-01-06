@@ -10,17 +10,17 @@ import (
 type (
 	// Service interface for the validator service
 	Service interface {
-		ValidateNilFields(
-			validations govalidatormappervalidations.Validations,
+		ValidateRequiredFields(
+			rootStructValidations *govalidatormappervalidations.StructValidations,
 			request interface{},
 			mapper *govalidatormapper.Mapper,
 		) error
-		ParseValidations(validations govalidatormappervalidations.Validations) (
+		ParseValidations(rootStructValidations *govalidatormappervalidations.StructValidations) (
 			interface{},
 			error,
 		)
 		RunAndParseValidations(
-			getValidationsFn func(govalidatormappervalidations.Validations) error,
+			getValidationsFn func(*govalidatormappervalidations.StructValidations) error,
 		) (interface{}, error)
 	}
 
@@ -50,14 +50,14 @@ func NewDefaultService(
 	}, nil
 }
 
-// ValidateNilFields validates the nil fields
-func (d *DefaultService) ValidateNilFields(
-	validations govalidatormappervalidations.Validations,
+// ValidateRequiredFields validates the required fields
+func (d *DefaultService) ValidateRequiredFields(
+	rootStructValidations *govalidatormappervalidations.StructValidations,
 	request interface{},
 	mapper *govalidatormapper.Mapper,
 ) error {
-	return d.validator.ValidateNilFields(
-		validations,
+	return d.validator.ValidateRequiredFields(
+		rootStructValidations,
 		request,
 		mapper,
 	)
@@ -65,15 +65,15 @@ func (d *DefaultService) ValidateNilFields(
 
 // ParseValidations parses the validations
 func (d *DefaultService) ParseValidations(
-	validations govalidatormappervalidations.Validations,
+	rootStructValidations *govalidatormappervalidations.StructValidations,
 ) (interface{}, error) {
 	// Check if there are any failed validations
-	if !validations.HasFailed() {
+	if !rootStructValidations.HasFailed() {
 		return nil, nil
 	}
 
 	// Get the parsed validations from the validations
-	parsedValidations, err := d.parser.ParseValidations(validations)
+	parsedValidations, err := d.parser.ParseValidations(rootStructValidations)
 	if err != nil {
 		return nil, err
 	}
@@ -82,17 +82,17 @@ func (d *DefaultService) ParseValidations(
 
 // RunAndParseValidations runs and parses the validations
 func (d *DefaultService) RunAndParseValidations(
-	getValidationsFn func(govalidatormappervalidations.Validations) error,
+	getValidationsFn func(*govalidatormappervalidations.StructValidations) error,
 ) (interface{}, error) {
 	// Initialize struct fields validations
-	validations := govalidatormappervalidations.NewDefaultValidations()
+	rootStructValidations := govalidatormappervalidations.NewStructValidations()
 
 	// Get the validations
-	err := getValidationsFn(validations)
+	err := getValidationsFn(rootStructValidations)
 	if err != nil {
 		return nil, err
 	}
 
 	// Parse the validations
-	return d.ParseValidations(validations)
+	return d.ParseValidations(rootStructValidations)
 }
