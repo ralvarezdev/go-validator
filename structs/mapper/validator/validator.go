@@ -69,8 +69,18 @@ func (d *DefaultValidator) ValidateRequiredFields(
 	// Iterate over the fields
 	typeReflection := valueReflection.Type()
 	for i := 0; i < valueReflection.NumField(); i++ {
+		// Get the field value and type
 		fieldValue := valueReflection.Field(i)
 		fieldType := typeReflection.Field(i)
+
+		// Check if the field has to be validated
+		if fields == nil {
+			continue
+		}
+		validationName, ok := fields[fieldType.Name]
+		if !ok {
+			continue
+		}
 
 		// Print field
 		if d.logger != nil {
@@ -79,15 +89,6 @@ func (d *DefaultValidator) ValidateRequiredFields(
 
 		// Check if the field is a pointer
 		if fieldValue.Kind() != reflect.Ptr {
-			// Check if the field has to be validated
-			if fields == nil {
-				continue
-			}
-			validationName, ok := fields[fieldType.Name]
-			if !ok {
-				continue
-			}
-
 			// Check if the field is uninitialized
 			if fieldValue.IsZero() {
 				if d.logger != nil {
@@ -105,15 +106,6 @@ func (d *DefaultValidator) ValidateRequiredFields(
 		// Check if the field is a nested struct
 		if fieldValue.Elem().Kind() != reflect.Struct {
 			continue // It's an optional field
-		}
-
-		// Check if the nested struct has to be validated
-		if fields == nil {
-			continue
-		}
-		validationName, ok := fields[fieldType.Name]
-		if !ok {
-			continue
 		}
 
 		// Check if the field is initialized

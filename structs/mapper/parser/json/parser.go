@@ -206,7 +206,7 @@ func (f *FlattenedParsedValidations) AddRootStructParsedValidations(
 	}
 
 	// Check if the fields are nil
-	if f.fields == nil {
+	if f.fields != nil {
 		return ErrFlattenedParsedValidationsAlreadyExists
 	}
 

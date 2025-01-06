@@ -20,7 +20,7 @@ type (
 			error,
 		)
 		RunAndParseValidations(
-			getValidationsFn func(*govalidatormappervalidations.StructValidations) error,
+			validatorFns ...func(*govalidatormappervalidations.StructValidations) error,
 		) (interface{}, error)
 	}
 
@@ -82,15 +82,16 @@ func (d *DefaultService) ParseValidations(
 
 // RunAndParseValidations runs and parses the validations
 func (d *DefaultService) RunAndParseValidations(
-	getValidationsFn func(*govalidatormappervalidations.StructValidations) error,
+	validatorFns ...func(*govalidatormappervalidations.StructValidations) error,
 ) (interface{}, error) {
 	// Initialize struct fields validations
 	rootStructValidations := govalidatormappervalidations.NewStructValidations()
 
-	// Get the validations
-	err := getValidationsFn(rootStructValidations)
-	if err != nil {
-		return nil, err
+	// Run the validator functions
+	for _, validatorFn := range validatorFns {
+		if err := validatorFn(rootStructValidations); err != nil {
+			return nil, err
+		}
 	}
 
 	// Parse the validations
