@@ -23,7 +23,9 @@ type (
 	}
 
 	// Parser is a struct that holds the JSON parser
-	Parser struct{}
+	Parser struct {
+		logger *Logger
+	}
 )
 
 // NewStructParsedValidations creates a new StructParsedValidations struct
@@ -264,8 +266,8 @@ func (f *FlattenedParsedValidations) GetFields() *map[string]interface{} {
 }
 
 // NewParser creates a new Parser struct
-func NewParser() *Parser {
-	return &Parser{}
+func NewParser(logger *Logger) *Parser {
+	return &Parser{logger: logger}
 }
 
 // GenerateParsedValidations returns a
@@ -307,6 +309,14 @@ func (p *Parser) GenerateParsedValidations(
 				fieldName,
 				fieldParsedValidations,
 			)
+
+			// Print the field parsed validations
+			if p.logger != nil {
+				p.logger.PrintFieldParsedValidations(
+					fieldName,
+					fieldValidations,
+				)
+			}
 		}
 	}
 
@@ -328,6 +338,14 @@ func (p *Parser) GenerateParsedValidations(
 				structName,
 				nestedStructParsedValidations,
 			)
+
+			// Print the nested struct parsed validations
+			if p.logger != nil {
+				p.logger.PrintStructParsedValidations(
+					structName,
+					nestedStructParsedValidations,
+				)
+			}
 		}
 	}
 

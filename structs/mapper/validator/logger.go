@@ -7,12 +7,12 @@ import (
 	"reflect"
 )
 
-// Logger is the JWT validator logger
+// Logger is the structs mapper validator logger
 type Logger struct {
 	logger gologgermodenamed.Logger
 }
 
-// NewLogger creates a new JWT validator logger
+// NewLogger creates a new structs mapper validator logger
 func NewLogger(header string, modeLogger gologgermode.Logger) (*Logger, error) {
 	// Initialize the mode named logger
 	namedLogger, err := gologgermodenamed.NewDefaultLogger(header, modeLogger)
