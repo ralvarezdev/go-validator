@@ -32,6 +32,26 @@ func NewDefaultValidator(
 	}
 }
 
+// IsFieldInitialized checks if a field is initialized
+func (d *DefaultValidator) IsFieldInitialized(
+	fieldValue reflect.Value,
+) (isInitialized bool) {
+	// Check if the field is not a pointer and is initialized
+	if fieldValue.Kind() != reflect.Ptr {
+		if fieldValue.IsZero() {
+			return false
+		}
+		return true
+	}
+
+	// Check if the field is initialized
+	if fieldValue.IsNil() {
+		return false
+	}
+
+	return true
+}
+
 // ValidateRequiredFields validates the required fields of a struct
 func (d *DefaultValidator) ValidateRequiredFields(
 	rootStructValidations *govalidatormappervalidations.StructValidations,
@@ -51,69 +71,68 @@ func (d *DefaultValidator) ValidateRequiredFields(
 
 	// Reflection of data
 	valueReflection := reflect.ValueOf(data)
+	typeReflection := valueReflection.Type()
 
 	// If data is a pointer, dereference it
 	if valueReflection.Kind() == reflect.Ptr {
 		valueReflection = valueReflection.Elem()
 	}
 
-	// Iterate over the fields
-	fields := (*mapper).Fields
-	nestedMappers := (*mapper).NestedMappers
+	// Get the struct name
+	structName := typeReflection.Name()
 
-	// Check if the struct has fields to validate
-	if fields == nil && nestedMappers == nil {
+	// Check if the struct has fields validations
+	if !mapper.HasFieldsValidations() {
 		return nil
 	}
 
 	// Iterate over the fields
-	typeReflection := valueReflection.Type()
 	for i := 0; i < valueReflection.NumField(); i++ {
 		// Get the field value and type
 		fieldValue := valueReflection.Field(i)
-		fieldType := typeReflection.Field(i)
+		structField := typeReflection.Field(i)
+		fieldType := structField.Type
+		fieldName := structField.Name
 
-		// Check if the field has to be validated
-		if fields == nil {
+		// Get the field tag name
+		validationName, isRequired := mapper.GetFieldValidationName(fieldName)
+
+		// Check if the field is parsed
+		isParsed, ok := mapper.IsFieldParsed(fieldName)
+		if !ok || !isParsed {
 			continue
-		}
-		validationName, ok := fields[fieldType.Name]
-		if !ok {
-			continue
-		}
-
-		// Print field
-		if d.logger != nil {
-			d.logger.PrintField(fieldType.Name, fieldType.Type, fieldValue)
-		}
-
-		// Check if the field is a pointer
-		if fieldValue.Kind() != reflect.Ptr {
-			// Check if the field is uninitialized
-			if fieldValue.IsZero() {
-				if d.logger != nil {
-					d.logger.UninitializedField(fieldType.Name)
-				}
-
-				rootStructValidations.AddFieldValidationError(
-					validationName,
-					fmt.Errorf(ErrRequiredField, validationName),
-				)
-			}
-			continue
-		}
-
-		// Check if the field is a nested struct
-		if fieldValue.Elem().Kind() != reflect.Struct {
-			continue // It's an optional field
 		}
 
 		// Check if the field is initialized
-		if fieldValue.IsNil() {
-			if d.logger != nil {
-				d.logger.UninitializedField(fieldType.Name)
-			}
+		isInitialized := d.IsFieldInitialized(fieldValue)
 
+		// Print field
+		if d.logger != nil {
+			if isInitialized {
+				d.logger.InitializedField(
+					structName,
+					fieldName,
+					fieldType,
+					fieldValue,
+					isRequired,
+				)
+			} else {
+				d.logger.UninitializedField(
+					structName,
+					fieldName,
+					fieldType,
+					isRequired,
+				)
+			}
+		}
+
+		// Check if the field has to be validated
+		if !isRequired {
+			continue
+		}
+
+		// Check if the field is a pointer
+		if !isInitialized {
 			rootStructValidations.AddFieldValidationError(
 				validationName,
 				fmt.Errorf(ErrRequiredField, validationName),
@@ -121,9 +140,14 @@ func (d *DefaultValidator) ValidateRequiredFields(
 			continue
 		}
 
+		// Check if the field is a scalar optional field
+		if fieldValue.Elem().Kind() != reflect.Struct {
+			continue
+		}
+
 		// Get the nested struct mapper
-		fieldNestedMapper, ok := nestedMappers[fieldType.Name]
-		if !ok {
+		fieldNestedMapper := mapper.GetFieldNestedMapper(fieldName)
+		if fieldNestedMapper == nil {
 			continue
 		}
 

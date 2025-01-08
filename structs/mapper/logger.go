@@ -23,15 +23,21 @@ func NewLogger(header string, modeLogger gologgermode.Logger) (*Logger, error) {
 	return &Logger{logger: namedLogger}, nil
 }
 
-// PrintField prints a field
-func (l *Logger) PrintField(
+// DetectedField prints a detected field
+func (l *Logger) DetectedField(
 	structName string,
 	fieldName string,
 	fieldType reflect.Type,
+	tag string,
+	required bool,
+	parsed bool,
 ) {
 	l.logger.Debug(
 		fmt.Sprintf("detected field on '%v'", structName),
 		fmt.Sprintf("field '%v'", fieldName),
 		fmt.Sprintf("type: '%v'", fieldType),
+		fmt.Sprintf("tag: '%v'", tag),
+		fmt.Sprintf("required: '%v'", required),
+		fmt.Sprintf("parsed: '%v'", parsed),
 	)
 }

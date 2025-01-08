@@ -22,8 +22,8 @@ func NewLogger(header string, modeLogger gologgermode.Logger) (*Logger, error) {
 	return &Logger{logger: namedLogger}, nil
 }
 
-// PrintFieldParsedValidations logs the parsed validations
-func (l *Logger) PrintFieldParsedValidations(
+// FieldParsedValidations logs the parsed validations
+func (l *Logger) FieldParsedValidations(
 	fieldName string,
 	fieldValidations *FieldParsedValidations,
 ) {
@@ -33,8 +33,8 @@ func (l *Logger) PrintFieldParsedValidations(
 	)
 }
 
-// PrintStructParsedValidations logs the parsed validations
-func (l *Logger) PrintStructParsedValidations(
+// StructParsedValidations logs the parsed validations
+func (l *Logger) StructParsedValidations(
 	structName string,
 	nestedStructParsedValidations *StructParsedValidations,
 ) {

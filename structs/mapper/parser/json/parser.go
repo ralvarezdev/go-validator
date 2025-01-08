@@ -312,7 +312,7 @@ func (p *Parser) GenerateParsedValidations(
 
 			// Print the field parsed validations
 			if p.logger != nil {
-				p.logger.PrintFieldParsedValidations(
+				p.logger.FieldParsedValidations(
 					fieldName,
 					fieldValidations,
 				)
@@ -341,7 +341,7 @@ func (p *Parser) GenerateParsedValidations(
 
 			// Print the nested struct parsed validations
 			if p.logger != nil {
-				p.logger.PrintStructParsedValidations(
+				p.logger.StructParsedValidations(
 					structName,
 					nestedStructParsedValidations,
 				)

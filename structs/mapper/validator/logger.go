@@ -23,22 +23,33 @@ func NewLogger(header string, modeLogger gologgermode.Logger) (*Logger, error) {
 	return &Logger{logger: namedLogger}, nil
 }
 
-// PrintField prints the field on debug mode
-func (l *Logger) PrintField(
+// InitializedField prints the initialized field on debug mode
+func (l *Logger) InitializedField(
+	structName,
 	fieldName string,
 	fieldType reflect.Type,
 	fieldValue interface{},
+	required bool,
 ) {
 	l.logger.Debug(
-		fmt.Sprintf("field '%v'", fieldName),
+		fmt.Sprintf("detected field on '%v'", structName),
+		fmt.Sprintf("field '%v' is initialized", fieldName),
 		fmt.Sprintf("type: '%v'", fieldType),
 		fmt.Sprintf("value: '%v'", fieldValue),
+		fmt.Sprintf("required: '%v'", required),
 	)
 }
 
 // UninitializedField prints the uninitialized field on debug mode
-func (l *Logger) UninitializedField(fieldName string) {
+func (l *Logger) UninitializedField(
+	structName, fieldName string,
+	fieldType reflect.Type,
+	required bool,
+) {
 	l.logger.Debug(
+		fmt.Sprintf("detected field on '%v'", structName),
 		fmt.Sprintf("field '%v' is uninitialized", fieldName),
+		fmt.Sprintf("type: '%v'", fieldType),
+		fmt.Sprintf("required: '%v'", required),
 	)
 }

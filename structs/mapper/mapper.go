@@ -21,11 +21,14 @@ const (
 type (
 	// Mapper is a map of fields to validate from a struct
 	Mapper struct {
-		// Fields key is the field name and value is the name used in the validation error
-		Fields map[string]string
+		// fields key is the field name and value is the name used in the validation error
+		fields *map[string]string
 
-		// NestedMappers key is the field name of the nested struct and value is the nested mapper
-		NestedMappers map[string]*Mapper
+		// parsedFields key is the field name and value is a boolean to determine if the field was parsed
+		parsedFields *map[string]bool
+
+		// nestedMappers key is the field name of the nested struct and value is the nested mapper
+		nestedMappers *map[string]*Mapper
 	}
 
 	// Generator is an interface for creating a mapper
@@ -43,6 +46,92 @@ type (
 		logger *Logger
 	}
 )
+
+// NewMapper creates a new mapper
+func NewMapper() *Mapper {
+	return &Mapper{}
+}
+
+// GetFieldsValidationsName returns the fields of the mapper
+func (m *Mapper) GetFieldsValidationsName() *map[string]string {
+	return m.fields
+}
+
+// GetFieldValidationName returns the validation name of a field
+func (m *Mapper) GetFieldValidationName(fieldName string) (string, bool) {
+	// Check if the fields map is nil
+	if m.fields == nil {
+		return "", false
+	}
+	return (*m.fields)[fieldName], true
+}
+
+// AddFieldValidationName adds a field validation name to the mapper
+func (m *Mapper) AddFieldValidationName(fieldName, fieldTagName string) {
+	// Initialize the fields map if it is nil
+	if m.fields == nil {
+		m.fields = &map[string]string{}
+	}
+
+	// Add the field validation name to the map
+	(*m.fields)[fieldName] = fieldTagName
+}
+
+// HasFieldsValidations returns if the mapper has fields
+func (m *Mapper) HasFieldsValidations() bool {
+	return m.fields != nil
+}
+
+// GetParsedFields returns the parsed fields of the mapper
+func (m *Mapper) GetParsedFields() *map[string]bool {
+	return m.parsedFields
+}
+
+// IsFieldParsed returns if a field was parsed
+func (m *Mapper) IsFieldParsed(fieldName string) (bool, bool) {
+	// Check if the parsed fields map is nil
+	if m.parsedFields == nil {
+		return false, false
+	}
+	return (*m.parsedFields)[fieldName], true
+}
+
+// SetFieldParsed sets if a field was parsed
+func (m *Mapper) SetFieldParsed(fieldName string, parsed bool) {
+	// Initialize the parsed fields map if it is nil
+	if m.parsedFields == nil {
+		m.parsedFields = &map[string]bool{}
+	}
+
+	// Set if the field was parsed
+	(*m.parsedFields)[fieldName] = parsed
+}
+
+// GetNestedMappers returns the nested mappers of the mapper
+func (m *Mapper) GetNestedMappers() *map[string]*Mapper {
+	return m.nestedMappers
+}
+
+// GetFieldNestedMapper returns the nested mapper of a field
+func (m *Mapper) GetFieldNestedMapper(fieldName string) *Mapper {
+	// Check if the nested mappers map is nil
+	if m.nestedMappers == nil {
+		return nil
+	}
+
+	return (*m.nestedMappers)[fieldName]
+}
+
+// AddFieldNestedMapper adds a nested mapper to the mapper
+func (m *Mapper) AddFieldNestedMapper(fieldName string, nestedMapper *Mapper) {
+	// Initialize the nested mappers map if it is nil
+	if m.nestedMappers == nil {
+		m.nestedMappers = &map[string]*Mapper{}
+	}
+
+	// Add the nested mapper to the map
+	(*m.nestedMappers)[fieldName] = nestedMapper
+}
 
 // NewProtobufGenerator creates a new Protobuf generator
 func NewProtobufGenerator(logger *Logger) *ProtobufGenerator {
@@ -71,51 +160,61 @@ func (p *ProtobufGenerator) NewMapper(structInstance interface{}) (
 		typeReflection = typeReflection.Elem()
 	}
 
-	// Initialize the map fields and the map of nested mappers
-	rootMapper := make(map[string]string)
-	rootNestedMappers := make(map[string]*Mapper)
+	// Get the struct name
+	structName := typeReflection.Name()
+
+	// Initialize the root map of fields and the map of nested mappers
+	rootMapper := NewMapper()
 
 	// Reflection of the type of data
-	var protobufTag string
-	var protobufName string
 	for i := 0; i < typeReflection.NumField(); i++ {
 		// Get the field type through reflection
-		field := typeReflection.Field(i)
+		structField := typeReflection.Field(i)
+		fieldType := structField.Type
+		fieldName := structField.Name
 
 		// Check if the field is a protoc generated field
-		if field.Name == State || field.Name == SizeCache || field.Name == UnknownFields {
+		if fieldName == State || fieldName == SizeCache || fieldName == UnknownFields {
 			continue
 		}
 
-		// Print field
-		fieldType := field.Type
-		if p.logger != nil {
-			p.logger.PrintField(typeReflection.Name(), field.Name, fieldType)
-		}
-
-		// Check if the field is a pointer
+		// Get the Protobuf tag of the field
+		var protobufTag string
 		if fieldType.Kind() != reflect.Ptr {
 			// Get the Protobuf tag of the field
-			protobufTag = field.Tag.Get(ProtobufTag)
+			protobufTag = structField.Tag.Get(ProtobufTag)
 			if protobufTag == "" {
-				return nil, fmt.Errorf(ErrMissingProtobufTag, field.Name)
+				return nil, fmt.Errorf(ErrMissingProtobufTag, fieldName)
 			}
 		} else {
+			// Dereference the pointer
 			fieldType = fieldType.Elem()
 
-			// Check if the element type is not a struct, which would mean that it is an optional scalar type
-			if fieldType.Kind() != reflect.Struct {
-				continue
-			}
-
 			// Get the Protobuf tag of the field
-			protobufTag = field.Tag.Get(ProtobufTag)
+			protobufTag = structField.Tag.Get(ProtobufTag)
 			if protobufTag == "" {
-				return nil, fmt.Errorf(ErrMissingProtobufTag, field.Name)
+				return nil, fmt.Errorf(ErrMissingProtobufTag, fieldName)
 			}
 
-			// Check the tag to determine if it contains 'oneof', which means it is an optional struct field
-			if ok := strings.Contains(protobufTag, ProtobufOneOf); ok {
+			// Check if the element type is not a struct and the tag to determine if it contains 'oneof', which means it is an optional struct field
+			if fieldType.Kind() != reflect.Struct || strings.Contains(
+				protobufTag,
+				ProtobufOneOf,
+			) {
+				// Add the field to the parsed fields map
+				rootMapper.SetFieldParsed(fieldName, true)
+
+				// Print field
+				if p.logger != nil {
+					p.logger.DetectedField(
+						structName,
+						fieldName,
+						fieldType,
+						protobufTag,
+						false,
+						true,
+					)
+				}
 				continue
 			}
 
@@ -128,13 +227,12 @@ func (p *ProtobufGenerator) NewMapper(structInstance interface{}) (
 			}
 
 			// Add the nested fields to the map
-			rootNestedMappers[field.Name] = fieldNestedMapper
+			rootMapper.AddFieldNestedMapper(fieldName, fieldNestedMapper)
 		}
 
 		// Get the field name from the Protobuf tag
-		tagParts := strings.Split(protobufTag, ",")
-		protobufName = ""
-		for _, part := range tagParts {
+		var protobufName string
+		for _, part := range strings.Split(protobufTag, ",") {
 			if strings.HasPrefix(part, ProtobufNamePrefix) {
 				protobufName = strings.TrimPrefix(part, ProtobufNamePrefix)
 				break
@@ -143,22 +241,29 @@ func (p *ProtobufGenerator) NewMapper(structInstance interface{}) (
 
 		// Check if the field name is empty
 		if protobufName == "" {
-			return nil, fmt.Errorf(ErrMissingProtobufTagName, field.Name)
+			return nil, fmt.Errorf(ErrMissingProtobufTagName, fieldName)
 		}
 
-		// Check if the field name has already been assigned
-		if _, ok := rootMapper[protobufName]; ok {
-			return nil, fmt.Errorf(ErrDuplicateProtobufTagName, protobufName)
-		}
+		// Add the field to the fields map
+		rootMapper.AddFieldValidationName(fieldName, protobufName)
 
-		// Add the field to the map
-		rootMapper[field.Name] = protobufName
+		// Add the field to the parsed fields map
+		rootMapper.SetFieldParsed(fieldName, true)
+
+		// Print field
+		if p.logger != nil {
+			p.logger.DetectedField(
+				structName,
+				fieldName,
+				fieldType,
+				protobufTag,
+				true,
+				true,
+			)
+		}
 	}
 
-	return &Mapper{
-		Fields:        rootMapper,
-		NestedMappers: rootNestedMappers,
-	}, nil
+	return rootMapper, nil
 }
 
 // NewMapper creates the fields to validate from a JSON struct
@@ -174,47 +279,56 @@ func (j *JSONGenerator) NewMapper(structInstance interface{}) (
 		typeReflection = typeReflection.Elem()
 	}
 
-	// Initialize the map fields and the map of nested mappers
-	rootMapper := make(map[string]string)
-	rootNestedMappers := make(map[string]*Mapper)
+	// Get the struct name
+	structName := typeReflection.Name()
+
+	// Initialize the root map of fields and the map of nested mappers
+	rootMapper := NewMapper()
 
 	// Reflection of the type of data
 	var jsonTag string
 	var jsonName string
 	for i := 0; i < typeReflection.NumField(); i++ {
 		// Get the field type through reflection
-		field := typeReflection.Field(i)
-
-		// Print field
-		fieldType := field.Type
-		if j.logger != nil {
-			j.logger.PrintField(typeReflection.Name(), field.Name, fieldType)
-		}
+		structField := typeReflection.Field(i)
+		fieldType := structField.Type
+		fieldTag := structField.Tag
+		fieldName := structField.Name
 
 		// Get the JSON tag of the field
-		jsonTag = field.Tag.Get(JSONTag)
+		jsonTag = fieldTag.Get(JSONTag)
 		if jsonTag == "" {
 			// Check if the field is a protoc generated field
-			if field.Name == State || field.Name == SizeCache || field.Name == UnknownFields {
+			if fieldName == State || fieldName == SizeCache || fieldName == UnknownFields {
 				return nil, fmt.Errorf(
 					ErrMissingJSONTagLooksLikeProtocField,
-					field.Name,
+					fieldName,
 				)
 			}
-			return nil, fmt.Errorf(ErrMissingJSONTag, field.Name)
+			return nil, fmt.Errorf(ErrMissingJSONTag, fieldName)
 		}
 
-		// Check if the JSON tag is unassigned
-		if jsonTag == "-" {
+		// Check if the JSON tag is unassigned or if it contains 'omitempty', which means it is an optional field
+		if jsonTag == "-" || strings.Contains(jsonTag, JSONOmitempty) {
+			// Add the field to the parsed fields map
+			isParsed := jsonTag != "-"
+			rootMapper.SetFieldParsed(fieldName, isParsed)
+
+			// Print field
+			if j.logger != nil {
+				j.logger.DetectedField(
+					structName,
+					fieldName,
+					fieldType,
+					jsonTag,
+					false,
+					isParsed,
+				)
+			}
 			continue
 		}
 
-		// Check the tag to determine if it contains 'omitempty', which means it is an optional field
-		if ok := strings.Contains(jsonTag, JSONOmitempty); ok {
-			continue
-		}
-
-		// Check if the field is a pointer
+		// Dereference the pointer
 		if fieldType.Kind() == reflect.Ptr {
 			fieldType = fieldType.Elem()
 		}
@@ -230,27 +344,34 @@ func (j *JSONGenerator) NewMapper(structInstance interface{}) (
 			}
 
 			// Add the nested fields to the map
-			rootNestedMappers[field.Name] = fieldNestedMapper
+			rootMapper.AddFieldNestedMapper(fieldName, fieldNestedMapper)
 		}
 
 		// Get the field name from the JSON tag
 		tagParts := strings.Split(jsonTag, ",")
 		if len(tagParts) == 0 {
-			return nil, fmt.Errorf(ErrEmptyJSONTag, field.Name)
+			return nil, fmt.Errorf(ErrEmptyJSONTag, fieldName)
 		}
 		jsonName = tagParts[0]
 
-		// Check if the field name has already been assigned
-		if _, ok := rootMapper[jsonName]; ok {
-			return nil, fmt.Errorf(ErrDuplicateJSONTagName, jsonName)
-		}
+		// Add the field to the fields map
+		rootMapper.AddFieldValidationName(fieldName, jsonName)
 
-		// Add the field to the map
-		rootMapper[field.Name] = jsonName
+		// Add the field to the parsed fields map
+		rootMapper.SetFieldParsed(fieldName, true)
+
+		// Print field
+		if j.logger != nil {
+			j.logger.DetectedField(
+				structName,
+				fieldName,
+				fieldType,
+				jsonTag,
+				true,
+				true,
+			)
+		}
 	}
 
-	return &Mapper{
-		Fields:        rootMapper,
-		NestedMappers: rootNestedMappers,
-	}, nil
+	return rootMapper, nil
 }
