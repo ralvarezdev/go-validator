@@ -2,6 +2,7 @@ package json
 
 import (
 	"fmt"
+	gologgerstrings "github.com/ralvarezdev/go-logger/strings"
 	govalidatormappervalidations "github.com/ralvarezdev/go-validator/structs/mapper/validations"
 )
 
@@ -102,14 +103,20 @@ func NewFieldParsedValidations() *FieldParsedValidations {
 }
 
 // AddErrors adds errors to the field parsed validations
-func (f *FieldParsedValidations) AddErrors(errors *[]string) {
+func (f *FieldParsedValidations) AddErrors(errors *[]error) {
 	// Check if the errors are nil
+	if errors == nil {
+		return
+	}
+
+	// Check if the field parsed validations errors are nil
 	if f.errors == nil {
 		f.errors = &[]string{}
 	}
 
 	// Append the errors to the field parsed validations
-	*f.errors = append(*f.errors, *errors...)
+	mappedErrors := gologgerstrings.MapErrorArrayToStringArray(errors)
+	*f.errors = append(*f.errors, *mappedErrors...)
 }
 
 // AddError adds an error to the field parsed validations
@@ -289,11 +296,11 @@ func (p *Parser) GenerateParsedValidations(
 	}
 
 	// Get the fields validations and the nested structs validations
-	fieldsValidations := rootStructParsedValidations.GetFieldsParsedValidations()
+	fieldsValidations := rootStructValidations.GetFieldsValidations()
 	nestedStructsValidations := rootStructValidations.GetNestedStructsValidations()
 
 	// Iterate over all fields and their errors
-	var fieldValidationsErrors *[]string
+	var fieldValidationsErrors *[]error
 	if fieldsValidations != nil {
 		for fieldName, fieldValidations := range *fieldsValidations {
 			// Check if the field has no errors
@@ -314,7 +321,7 @@ func (p *Parser) GenerateParsedValidations(
 			if p.logger != nil {
 				p.logger.FieldParsedValidations(
 					fieldName,
-					fieldValidations,
+					fieldParsedValidations,
 				)
 			}
 		}
