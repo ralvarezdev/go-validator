@@ -70,13 +70,14 @@ func (d *DefaultValidator) ValidateRequiredFields(
 	}
 
 	// Iterate over the fields
-	typeReflection := rootStructValidations.GetTypeReflection()
-	valueReflection := rootStructValidations.GetValueReflection()
-	structName := rootStructValidations.GetStructName()
-	for i := 0; i < valueReflection.NumField(); i++ {
+	reflection := rootStructValidations.GetReflection()
+	reflectedType := reflection.GetReflectedType()
+	reflectedValue := reflection.GetReflectedValue()
+	structTypeName := reflection.GetReflectedTypeName()
+	for i := 0; i < reflectedValue.NumField(); i++ {
 		// Get the field value and type
-		fieldValue := valueReflection.Field(i)
-		structField := typeReflection.Field(i)
+		fieldValue := reflectedValue.Field(i)
+		structField := reflectedType.Field(i)
 		fieldType := structField.Type
 		fieldName := structField.Name
 
@@ -96,7 +97,7 @@ func (d *DefaultValidator) ValidateRequiredFields(
 		if d.logger != nil {
 			if isInitialized {
 				d.logger.InitializedField(
-					structName,
+					structTypeName,
 					fieldName,
 					fieldType,
 					fieldValue,
@@ -104,7 +105,7 @@ func (d *DefaultValidator) ValidateRequiredFields(
 				)
 			} else {
 				d.logger.UninitializedField(
-					structName,
+					structTypeName,
 					fieldName,
 					fieldType,
 					isRequired,
@@ -138,7 +139,10 @@ func (d *DefaultValidator) ValidateRequiredFields(
 		}
 
 		// Initialize the nested struct mapper validations
-		nestedStructValidations, err := govalidatormappervalidations.NewStructValidations(fieldValue)
+		nestedStructValidations, err := govalidatormappervalidations.NewNestedStructValidations(
+			fieldName,
+			fieldValue,
+		)
 		if err != nil {
 			return err
 		}

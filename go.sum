@@ -2,5 +2,7 @@ github.com/ralvarezdev/go-flags v0.3.1 h1:YxGYUonmr0dwJL+9oDY/4GqCl1CYwYDJExpGXX
 github.com/ralvarezdev/go-flags v0.3.1/go.mod h1:R3yVBYvzwqfOp26LidaiJ/zftVAnPC3pKunVpV/vosE=
 github.com/ralvarezdev/go-logger v0.4.5 h1:Lw7DdZUb4YSQDA7J9nv79soojw1eFHVVzO8wdE9d+Qg=
 github.com/ralvarezdev/go-logger v0.4.5/go.mod h1:vq47onxpED19/o3dh5/YbBKK0eZhqJENPgACYkqNNi8=
+github.com/ralvarezdev/go-reflect v0.1.0 h1:q0CypQURgOgxkLHilYVFazYi3nlSxNdkjSoYpuhFYOA=
+github.com/ralvarezdev/go-reflect v0.1.0/go.mod h1:jv3EqQfUixWtNeJd/Rnzf0IDcYZ1z3GApRdAGQHdHZQ=
 github.com/ralvarezdev/go-strings v0.1.0 h1:bE4eEkdfsHwpgUw+s8/EdLPkRTPki/FTGZx8iEOOQBQ=
 github.com/ralvarezdev/go-strings v0.1.0/go.mod h1:8sFOqmPJpqzS7bTjf91EzUCITnwpmkfifwY80GxV5r8=

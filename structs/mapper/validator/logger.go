@@ -25,31 +25,31 @@ func NewLogger(header string, modeLogger gologgermode.Logger) (*Logger, error) {
 
 // InitializedField prints the initialized field on debug mode
 func (l *Logger) InitializedField(
-	structName,
+	structTypeName,
 	fieldName string,
 	fieldType reflect.Type,
 	fieldValue interface{},
 	required bool,
 ) {
 	l.logger.Debug(
-		fmt.Sprintf("detected field on struct '%v'", structName),
-		fmt.Sprintf("field '%v' is initialized", fieldName),
-		fmt.Sprintf("type: '%v'", fieldType),
-		fmt.Sprintf("value: '%v'", fieldValue),
-		fmt.Sprintf("required: '%v'", required),
+		"detected initialized field on struct type: "+structTypeName,
+		"field name: "+fieldName,
+		fmt.Sprintf("field type: '%v'", fieldType),
+		fmt.Sprintf("field value: '%v'", fieldValue),
+		fmt.Sprintf("field is required: '%v'", required),
 	)
 }
 
 // UninitializedField prints the uninitialized field on debug mode
 func (l *Logger) UninitializedField(
-	structName, fieldName string,
+	structTypeName, fieldName string,
 	fieldType reflect.Type,
 	required bool,
 ) {
 	l.logger.Debug(
-		fmt.Sprintf("detected field on struct '%v'", structName),
-		fmt.Sprintf("field '%v' is uninitialized", fieldName),
-		fmt.Sprintf("type: '%v'", fieldType),
-		fmt.Sprintf("required: '%v'", required),
+		"detected uninitialized field on struct type: "+structTypeName,
+		"field name: "+fieldName,
+		fmt.Sprintf("field type: '%v'", fieldType),
+		fmt.Sprintf("field is required: '%v'", required),
 	)
 }

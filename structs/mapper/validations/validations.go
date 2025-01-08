@@ -1,16 +1,14 @@
 package validations
 
 import (
-	"reflect"
+	goreflect "github.com/ralvarezdev/go-reflect"
 )
 
 type (
 	// StructValidations is a struct that holds the struct validations for the generated validations of a struct
 	StructValidations struct {
-		structData               interface{}
-		structName               string
-		valueReflection          reflect.Value
-		typeReflection           reflect.Type
+		fieldName                *string
+		reflection               *goreflect.Reflection
 		fieldsValidations        *map[string]*FieldValidations
 		nestedStructsValidations *map[string]*StructValidations
 	}
@@ -22,50 +20,44 @@ type (
 )
 
 // NewStructValidations creates a new StructValidations struct
-func NewStructValidations(structData interface{}) (*StructValidations, error) {
-	// Check if the struct data is nil
-	if structData == nil {
-		return nil, ErrNilStructData
+func NewStructValidations(instance interface{}) (*StructValidations, error) {
+	// Check if the instance is nil
+	if instance == nil {
+		return nil, ErrNilInstance
 	}
-
-	// Reflection of data
-	valueReflection := reflect.ValueOf(structData)
-
-	// If data is a pointer, dereference it
-	if valueReflection.Kind() == reflect.Ptr {
-		valueReflection = valueReflection.Elem()
-	}
-	typeReflection := valueReflection.Type()
-
-	// Get the struct name
-	structName := typeReflection.Name()
 
 	return &StructValidations{
-		structData:      structData,
-		structName:      structName,
-		valueReflection: valueReflection,
-		typeReflection:  typeReflection,
+		reflection: goreflect.NewReflection(instance),
 	}, nil
 }
 
-// GetStructData returns the struct data
-func (s *StructValidations) GetStructData() interface{} {
-	return s.structData
+// NewNestedStructValidations creates a new nested StructValidations struct
+func NewNestedStructValidations(
+	fieldName string,
+	instance interface{},
+) (*StructValidations, error) {
+	// Check if the field name is empty or the instance is nil
+	if instance == nil {
+		return nil, ErrNilInstance
+	}
+	if fieldName == "" {
+		return NewStructValidations(instance)
+	}
+
+	return &StructValidations{
+		fieldName:  &fieldName,
+		reflection: goreflect.NewReflection(instance),
+	}, nil
 }
 
-// GetStructName returns the struct name
-func (s *StructValidations) GetStructName() string {
-	return s.structName
+// GetReflection returns the reflection of the struct
+func (s *StructValidations) GetReflection() *goreflect.Reflection {
+	return s.reflection
 }
 
-// GetValueReflection returns the value reflection
-func (s *StructValidations) GetValueReflection() reflect.Value {
-	return s.valueReflection
-}
-
-// GetTypeReflection returns the type reflection
-func (s *StructValidations) GetTypeReflection() reflect.Type {
-	return s.typeReflection
+// GetStructTypeName returns the type name of the struct
+func (s *StructValidations) GetStructTypeName() string {
+	return s.reflection.GetReflectedTypeName()
 }
 
 // HasFailed returns true if there are failed validations

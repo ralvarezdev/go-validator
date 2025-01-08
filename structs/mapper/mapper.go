@@ -2,6 +2,7 @@ package mapper
 
 import (
 	"fmt"
+	goreflect "github.com/ralvarezdev/go-reflect"
 	"reflect"
 	"strings"
 )
@@ -166,23 +167,18 @@ func (p *ProtobufGenerator) NewMapper(structInstance interface{}) (
 	error,
 ) {
 	// Reflection of data
-	typeReflection := reflect.TypeOf(structInstance)
+	reflectedType := goreflect.GetDereferencedType(structInstance)
 
-	// If data is a pointer, dereference it
-	if typeReflection.Kind() == reflect.Ptr {
-		typeReflection = typeReflection.Elem()
-	}
-
-	// Get the struct name
-	structName := typeReflection.Name()
+	// Get the struct type name
+	structTypeName := goreflect.GetTypeName(reflectedType)
 
 	// Initialize the root map of fields and the map of nested mappers
 	rootMapper := NewMapper(structInstance)
 
 	// Reflection of the type of data
-	for i := 0; i < typeReflection.NumField(); i++ {
+	for i := 0; i < reflectedType.NumField(); i++ {
 		// Get the field type through reflection
-		structField := typeReflection.Field(i)
+		structField := reflectedType.Field(i)
 		fieldType := structField.Type
 		fieldName := structField.Name
 
@@ -220,7 +216,7 @@ func (p *ProtobufGenerator) NewMapper(structInstance interface{}) (
 				// Print field
 				if p.logger != nil {
 					p.logger.DetectedField(
-						structName,
+						structTypeName,
 						fieldName,
 						fieldType,
 						protobufTag,
@@ -266,7 +262,7 @@ func (p *ProtobufGenerator) NewMapper(structInstance interface{}) (
 		// Print field
 		if p.logger != nil {
 			p.logger.DetectedField(
-				structName,
+				structTypeName,
 				fieldName,
 				fieldType,
 				protobufTag,
@@ -285,15 +281,10 @@ func (j *JSONGenerator) NewMapper(structInstance interface{}) (
 	error,
 ) {
 	// Reflection of data
-	typeReflection := reflect.TypeOf(structInstance)
+	reflectedType := goreflect.GetDereferencedType(structInstance)
 
-	// If data is a pointer, dereference it
-	if typeReflection.Kind() == reflect.Ptr {
-		typeReflection = typeReflection.Elem()
-	}
-
-	// Get the struct name
-	structName := typeReflection.Name()
+	// Get the struct type name
+	structTypeName := reflectedType.Name()
 
 	// Initialize the root map of fields and the map of nested mappers
 	rootMapper := NewMapper(structInstance)
@@ -301,9 +292,9 @@ func (j *JSONGenerator) NewMapper(structInstance interface{}) (
 	// Reflection of the type of data
 	var jsonTag string
 	var jsonName string
-	for i := 0; i < typeReflection.NumField(); i++ {
+	for i := 0; i < reflectedType.NumField(); i++ {
 		// Get the field type through reflection
-		structField := typeReflection.Field(i)
+		structField := reflectedType.Field(i)
 		fieldType := structField.Type
 		fieldTag := structField.Tag
 		fieldName := structField.Name
@@ -330,7 +321,7 @@ func (j *JSONGenerator) NewMapper(structInstance interface{}) (
 			// Print field
 			if j.logger != nil {
 				j.logger.DetectedField(
-					structName,
+					structTypeName,
 					fieldName,
 					fieldType,
 					jsonTag,
@@ -376,7 +367,7 @@ func (j *JSONGenerator) NewMapper(structInstance interface{}) (
 		// Print field
 		if j.logger != nil {
 			j.logger.DetectedField(
-				structName,
+				structTypeName,
 				fieldName,
 				fieldType,
 				jsonTag,
