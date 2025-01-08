@@ -376,6 +376,7 @@ func (p *Parser) GenerateParsedValidations(
 
 			// Add the nested struct parsed validations to the root struct parsed validations
 			rootStructParsedValidations.AddNestedStructParsedValidations(
+				fieldName,
 				nestedStructParsedValidations,
 			)
 
