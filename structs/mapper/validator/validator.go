@@ -71,12 +71,12 @@ func (d *DefaultValidator) ValidateRequiredFields(
 
 	// Reflection of data
 	valueReflection := reflect.ValueOf(data)
-	typeReflection := valueReflection.Type()
 
 	// If data is a pointer, dereference it
 	if valueReflection.Kind() == reflect.Ptr {
 		valueReflection = valueReflection.Elem()
 	}
+	typeReflection := valueReflection.Type()
 
 	// Get the struct name
 	structName := typeReflection.Name()
