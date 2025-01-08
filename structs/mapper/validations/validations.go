@@ -27,7 +27,7 @@ func NewStructValidations(instance interface{}) (*StructValidations, error) {
 	}
 
 	return &StructValidations{
-		reflection: goreflect.NewReflection(instance),
+		reflection: goreflect.NewDereferencedReflection(instance),
 	}, nil
 }
 
@@ -46,7 +46,7 @@ func NewNestedStructValidations(
 
 	return &StructValidations{
 		fieldName:  &fieldName,
-		reflection: goreflect.NewReflection(instance),
+		reflection: goreflect.NewDereferencedReflection(instance),
 	}, nil
 }
 
