@@ -1,8 +1,16 @@
 package validations
 
+import (
+	"reflect"
+)
+
 type (
 	// StructValidations is a struct that holds the struct validations for the generated validations of a struct
 	StructValidations struct {
+		structData               interface{}
+		structName               string
+		valueReflection          reflect.Value
+		typeReflection           reflect.Type
 		fieldsValidations        *map[string]*FieldValidations
 		nestedStructsValidations *map[string]*StructValidations
 	}
@@ -14,8 +22,50 @@ type (
 )
 
 // NewStructValidations creates a new StructValidations struct
-func NewStructValidations() *StructValidations {
-	return &StructValidations{}
+func NewStructValidations(structData interface{}) (*StructValidations, error) {
+	// Check if the struct data is nil
+	if structData == nil {
+		return nil, ErrNilStructData
+	}
+
+	// Reflection of data
+	valueReflection := reflect.ValueOf(structData)
+
+	// If data is a pointer, dereference it
+	if valueReflection.Kind() == reflect.Ptr {
+		valueReflection = valueReflection.Elem()
+	}
+	typeReflection := valueReflection.Type()
+
+	// Get the struct name
+	structName := typeReflection.Name()
+
+	return &StructValidations{
+		structData:      structData,
+		structName:      structName,
+		valueReflection: valueReflection,
+		typeReflection:  typeReflection,
+	}, nil
+}
+
+// GetStructData returns the struct data
+func (s *StructValidations) GetStructData() interface{} {
+	return s.structData
+}
+
+// GetStructName returns the struct name
+func (s *StructValidations) GetStructName() string {
+	return s.structName
+}
+
+// GetValueReflection returns the value reflection
+func (s *StructValidations) GetValueReflection() reflect.Value {
+	return s.valueReflection
+}
+
+// GetTypeReflection returns the type reflection
+func (s *StructValidations) GetTypeReflection() reflect.Type {
+	return s.typeReflection
 }
 
 // HasFailed returns true if there are failed validations

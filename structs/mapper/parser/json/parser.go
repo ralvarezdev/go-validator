@@ -2,13 +2,15 @@ package json
 
 import (
 	"fmt"
-	gologgerstrings "github.com/ralvarezdev/go-logger/strings"
+	gostringsconvert "github.com/ralvarezdev/go-strings/convert"
+	govalidatormapperparser "github.com/ralvarezdev/go-validator/structs/mapper/parser"
 	govalidatormappervalidations "github.com/ralvarezdev/go-validator/structs/mapper/validations"
 )
 
 type (
 	// StructParsedValidations is the struct for the struct JSON parsed validations
 	StructParsedValidations struct {
+		structName    string
 		nestedStructs *map[string]*StructParsedValidations
 		fields        *map[string]*FieldParsedValidations
 	}
@@ -30,8 +32,13 @@ type (
 )
 
 // NewStructParsedValidations creates a new StructParsedValidations struct
-func NewStructParsedValidations() *StructParsedValidations {
-	return &StructParsedValidations{}
+func NewStructParsedValidations(structName string) *StructParsedValidations {
+	return &StructParsedValidations{structName: structName}
+}
+
+// GetStructName returns the struct name from the struct parsed validations
+func (s *StructParsedValidations) GetStructName() string {
+	return s.structName
 }
 
 // AddFieldParsedValidations adds a field parsed validations to the struct parsed validations
@@ -115,7 +122,7 @@ func (f *FieldParsedValidations) AddErrors(errors *[]error) {
 	}
 
 	// Append the errors to the field parsed validations
-	mappedErrors := gologgerstrings.MapErrorArrayToStringArray(errors)
+	mappedErrors := gostringsconvert.ErrorArrayToStringArray(errors)
 	*f.errors = append(*f.errors, *mappedErrors...)
 }
 
@@ -174,11 +181,10 @@ func (f *FlattenedParsedValidations) AddFieldParsedValidations(
 
 // AddNestedStructParsedValidations adds a nested struct parsed validations to the flattened JSON parsed validations
 func (f *FlattenedParsedValidations) AddNestedStructParsedValidations(
-	structName string,
 	structParsedValidations *StructParsedValidations,
 ) error {
 	// Check if the struct name is empty or the struct parsed validations are nil
-	if structName == "" || structParsedValidations == nil {
+	if structParsedValidations == nil {
 		return nil
 	}
 
@@ -189,6 +195,7 @@ func (f *FlattenedParsedValidations) AddNestedStructParsedValidations(
 	}
 
 	// Check if the struct name is already in the flattened JSON parsed validations
+	structName := structParsedValidations.GetStructName()
 	if _, ok := (*f.fields)[structName]; ok {
 		return fmt.Errorf(ErrNilFieldNameAlreadyParsed, structName)
 	}
@@ -303,6 +310,11 @@ func (p *Parser) GenerateParsedValidations(
 	var fieldValidationsErrors *[]error
 	if fieldsValidations != nil {
 		for fieldName, fieldValidations := range *fieldsValidations {
+			// Check if the field validations are nil
+			if fieldValidations == nil {
+				continue
+			}
+
 			// Check if the field has no errors
 			fieldValidationsErrors = fieldValidations.GetErrors()
 			if fieldValidationsErrors == nil || len(*fieldValidationsErrors) == 0 {
@@ -320,6 +332,7 @@ func (p *Parser) GenerateParsedValidations(
 			// Print the field parsed validations
 			if p.logger != nil {
 				p.logger.FieldParsedValidations(
+					rootStructValidations.GetStructName(),
 					fieldName,
 					fieldParsedValidations,
 				)
@@ -330,8 +343,13 @@ func (p *Parser) GenerateParsedValidations(
 	// Iterate over all nested structs validations
 	if nestedStructsValidations != nil {
 		for structName, nestedStructValidations := range *nestedStructsValidations {
+			// Check if the nested struct validations are nil
+			if nestedStructValidations == nil {
+				continue
+			}
+
 			// Generate the nested JSON parsed validations
-			nestedStructParsedValidations := NewStructParsedValidations()
+			nestedStructParsedValidations := NewStructParsedValidations(nestedStructValidations.GetStructName())
 			err := p.GenerateParsedValidations(
 				nestedStructValidations,
 				nestedStructParsedValidations,
@@ -345,14 +363,6 @@ func (p *Parser) GenerateParsedValidations(
 				structName,
 				nestedStructParsedValidations,
 			)
-
-			// Print the nested struct parsed validations
-			if p.logger != nil {
-				p.logger.StructParsedValidations(
-					structName,
-					nestedStructParsedValidations,
-				)
-			}
 		}
 	}
 
@@ -365,7 +375,7 @@ func (p *Parser) ParseValidations(rootStructValidations *govalidatormappervalida
 	error,
 ) {
 	// Initialize the parsed validations
-	rootParsedValidations := NewStructParsedValidations()
+	rootParsedValidations := NewStructParsedValidations(rootStructValidations.GetStructName())
 
 	// Generate the JSON parsed validations
 	err := p.GenerateParsedValidations(

@@ -32,7 +32,7 @@ func (l *Logger) InitializedField(
 	required bool,
 ) {
 	l.logger.Debug(
-		fmt.Sprintf("detected field on '%v'", structName),
+		fmt.Sprintf("detected field on struct '%v'", structName),
 		fmt.Sprintf("field '%v' is initialized", fieldName),
 		fmt.Sprintf("type: '%v'", fieldType),
 		fmt.Sprintf("value: '%v'", fieldValue),
@@ -47,7 +47,7 @@ func (l *Logger) UninitializedField(
 	required bool,
 ) {
 	l.logger.Debug(
-		fmt.Sprintf("detected field on '%v'", structName),
+		fmt.Sprintf("detected field on struct '%v'", structName),
 		fmt.Sprintf("field '%v' is uninitialized", fieldName),
 		fmt.Sprintf("type: '%v'", fieldType),
 		fmt.Sprintf("required: '%v'", required),

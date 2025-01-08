@@ -12,7 +12,6 @@ type (
 	Validator interface {
 		ValidateRequiredFields(
 			rootStructValidations *govalidatormappervalidations.StructValidations,
-			data interface{},
 			mapper *govalidatormapper.Mapper,
 		) (err error)
 	}
@@ -55,31 +54,15 @@ func (d *DefaultValidator) IsFieldInitialized(
 // ValidateRequiredFields validates the required fields of a struct
 func (d *DefaultValidator) ValidateRequiredFields(
 	rootStructValidations *govalidatormappervalidations.StructValidations,
-	data interface{},
 	mapper *govalidatormapper.Mapper,
-) (err error) {
+) error {
 	// Check if either the root struct validations, data or the struct fields to validate are nil
 	if rootStructValidations == nil {
 		return govalidatormappervalidations.ErrNilStructValidations
 	}
-	if data == nil {
-		return ErrNilData
-	}
 	if mapper == nil {
 		return ErrNilMapper
 	}
-
-	// Reflection of data
-	valueReflection := reflect.ValueOf(data)
-
-	// If data is a pointer, dereference it
-	if valueReflection.Kind() == reflect.Ptr {
-		valueReflection = valueReflection.Elem()
-	}
-	typeReflection := valueReflection.Type()
-
-	// Get the struct name
-	structName := typeReflection.Name()
 
 	// Check if the struct has fields validations
 	if !mapper.HasFieldsValidations() {
@@ -87,6 +70,9 @@ func (d *DefaultValidator) ValidateRequiredFields(
 	}
 
 	// Iterate over the fields
+	typeReflection := rootStructValidations.GetTypeReflection()
+	valueReflection := rootStructValidations.GetValueReflection()
+	structName := rootStructValidations.GetStructName()
 	for i := 0; i < valueReflection.NumField(); i++ {
 		// Get the field value and type
 		fieldValue := valueReflection.Field(i)
@@ -152,12 +138,14 @@ func (d *DefaultValidator) ValidateRequiredFields(
 		}
 
 		// Initialize the nested struct mapper validations
-		nestedStructValidations := govalidatormappervalidations.NewStructValidations()
+		nestedStructValidations, err := govalidatormappervalidations.NewStructValidations(fieldValue)
+		if err != nil {
+			return err
+		}
 
 		// Validate the nested struct
 		err = d.ValidateRequiredFields(
 			nestedStructValidations,
-			fieldValue,
 			fieldNestedMapper,
 		)
 		if err != nil {

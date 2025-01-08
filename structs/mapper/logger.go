@@ -33,7 +33,7 @@ func (l *Logger) DetectedField(
 	parsed bool,
 ) {
 	l.logger.Debug(
-		fmt.Sprintf("detected field on '%v'", structName),
+		fmt.Sprintf("detected field on struct '%v'", structName),
 		fmt.Sprintf("field '%v'", fieldName),
 		fmt.Sprintf("type: '%v'", fieldType),
 		fmt.Sprintf("tag: '%v'", tag),

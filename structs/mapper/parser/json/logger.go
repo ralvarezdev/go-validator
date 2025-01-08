@@ -24,22 +24,20 @@ func NewLogger(header string, modeLogger gologgermode.Logger) (*Logger, error) {
 
 // FieldParsedValidations logs the parsed validations
 func (l *Logger) FieldParsedValidations(
+	structName string,
 	fieldName string,
 	fieldValidations *FieldParsedValidations,
 ) {
-	l.logger.Debug(
-		fmt.Sprintf("parsed validations to field '%v'", fieldName),
-		fmt.Sprintf("parsed validations: %v", fieldValidations),
-	)
-}
+	// Get the errors
+	errors := fieldValidations.GetErrors()
+	if errors == nil {
+		return
+	}
 
-// StructParsedValidations logs the parsed validations
-func (l *Logger) StructParsedValidations(
-	structName string,
-	nestedStructParsedValidations *StructParsedValidations,
-) {
+	// Log the parsed validations
 	l.logger.Debug(
 		fmt.Sprintf("parsed validations to struct '%v'", structName),
-		fmt.Sprintf("parsed validations: %v", nestedStructParsedValidations),
+		fmt.Sprintf("field '%v'", fieldName),
+		fmt.Sprintf("field validations errors: %v", *errors),
 	)
 }

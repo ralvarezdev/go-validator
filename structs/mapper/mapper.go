@@ -21,6 +21,9 @@ const (
 type (
 	// Mapper is a map of fields to validate from a struct
 	Mapper struct {
+		// structInstance is the instance of the struct
+		structInstance interface{}
+
 		// fields key is the field name and value is the name used in the validation error
 		fields *map[string]string
 
@@ -48,8 +51,18 @@ type (
 )
 
 // NewMapper creates a new mapper
-func NewMapper() *Mapper {
-	return &Mapper{}
+func NewMapper(structInstance interface{}) *Mapper {
+	return &Mapper{structInstance: structInstance}
+}
+
+// GetStructInstance returns the instance of the struct
+func (m *Mapper) GetStructInstance() interface{} {
+	return m.structInstance
+}
+
+// Type returns the type of the struct instance
+func (m *Mapper) Type() reflect.Type {
+	return reflect.TypeOf(m.structInstance)
 }
 
 // GetFieldsValidationsName returns the fields of the mapper
@@ -164,7 +177,7 @@ func (p *ProtobufGenerator) NewMapper(structInstance interface{}) (
 	structName := typeReflection.Name()
 
 	// Initialize the root map of fields and the map of nested mappers
-	rootMapper := NewMapper()
+	rootMapper := NewMapper(structInstance)
 
 	// Reflection of the type of data
 	for i := 0; i < typeReflection.NumField(); i++ {
@@ -283,7 +296,7 @@ func (j *JSONGenerator) NewMapper(structInstance interface{}) (
 	structName := typeReflection.Name()
 
 	// Initialize the root map of fields and the map of nested mappers
-	rootMapper := NewMapper()
+	rootMapper := NewMapper(structInstance)
 
 	// Reflection of the type of data
 	var jsonTag string

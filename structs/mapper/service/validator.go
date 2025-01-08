@@ -12,7 +12,6 @@ type (
 	Service interface {
 		ValidateRequiredFields(
 			rootStructValidations *govalidatormappervalidations.StructValidations,
-			request interface{},
 			mapper *govalidatormapper.Mapper,
 		) error
 		ParseValidations(rootStructValidations *govalidatormappervalidations.StructValidations) (
@@ -20,6 +19,7 @@ type (
 			error,
 		)
 		RunAndParseValidations(
+			body interface{},
 			validatorFns ...func(*govalidatormappervalidations.StructValidations) error,
 		) (interface{}, error)
 	}
@@ -53,12 +53,10 @@ func NewDefaultService(
 // ValidateRequiredFields validates the required fields
 func (d *DefaultService) ValidateRequiredFields(
 	rootStructValidations *govalidatormappervalidations.StructValidations,
-	request interface{},
 	mapper *govalidatormapper.Mapper,
 ) error {
 	return d.validator.ValidateRequiredFields(
 		rootStructValidations,
-		request,
 		mapper,
 	)
 }
@@ -82,14 +80,18 @@ func (d *DefaultService) ParseValidations(
 
 // RunAndParseValidations runs and parses the validations
 func (d *DefaultService) RunAndParseValidations(
+	body interface{},
 	validatorFns ...func(*govalidatormappervalidations.StructValidations) error,
 ) (interface{}, error) {
-	// Initialize struct fields validations
-	rootStructValidations := govalidatormappervalidations.NewStructValidations()
+	// Initialize struct fields validations from the request body
+	rootStructValidations, err := govalidatormappervalidations.NewStructValidations(body)
+	if err != nil {
+		return nil, err
+	}
 
 	// Run the validator functions
 	for _, validatorFn := range validatorFns {
-		if err := validatorFn(rootStructValidations); err != nil {
+		if err = validatorFn(rootStructValidations); err != nil {
 			return nil, err
 		}
 	}
