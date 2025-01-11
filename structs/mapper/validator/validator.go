@@ -82,12 +82,15 @@ func (d *DefaultValidator) ValidateRequiredFields(
 		fieldName := structField.Name
 
 		// Get the field tag name
-		validationName, isRequired := mapper.GetFieldValidationName(fieldName)
+		fieldTagName, ok := mapper.GetFieldTagName(fieldName)
+		if !ok {
+			return fmt.Errorf(ErrFieldTagNameNotFound, fieldName)
+		}
 
-		// Check if the field is parsed
-		isParsed, ok := mapper.IsFieldParsed(fieldName)
-		if !ok || !isParsed {
-			continue
+		// Check if the field is required
+		isRequired, ok := mapper.IsFieldRequired(fieldName)
+		if !ok {
+			return fmt.Errorf(ErrFieldIsRequiredNotFound, fieldName)
 		}
 
 		// Check if the field is initialized
@@ -121,8 +124,8 @@ func (d *DefaultValidator) ValidateRequiredFields(
 		// Check if the field is a pointer
 		if !isInitialized {
 			rootStructValidations.AddFieldValidationError(
-				validationName,
-				fmt.Errorf(ErrRequiredField, validationName),
+				fieldTagName,
+				fmt.Errorf(ErrRequiredField, fieldTagName),
 			)
 			continue
 		}
@@ -158,7 +161,7 @@ func (d *DefaultValidator) ValidateRequiredFields(
 
 		// Add the nested struct validations to the root struct validations
 		rootStructValidations.AddNestedStructValidations(
-			validationName,
+			fieldTagName,
 			nestedStructValidations,
 		)
 	}

@@ -30,7 +30,6 @@ func (l *Logger) DetectedField(
 	fieldType reflect.Type,
 	tag string,
 	required bool,
-	parsed bool,
 ) {
 	l.logger.Debug(
 		"detected field on struct type: "+structTypeName,
@@ -38,6 +37,5 @@ func (l *Logger) DetectedField(
 		fmt.Sprintf("field type: '%v'", fieldType),
 		"field tag: "+tag,
 		fmt.Sprintf("field is required: '%v'", required),
-		fmt.Sprintf("field is parsed: '%v'", parsed),
 	)
 }
