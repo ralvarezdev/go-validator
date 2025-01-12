@@ -1,47 +1,46 @@
-package service
+package validator
 
 import (
-	govalidatormapper "github.com/ralvarezdev/go-validator/structs/mapper"
-	govalidatormapperparser "github.com/ralvarezdev/go-validator/structs/mapper/parser"
-	govalidatormappervalidations "github.com/ralvarezdev/go-validator/structs/mapper/validations"
-	govalidatormappervalidator "github.com/ralvarezdev/go-validator/structs/mapper/validator"
+	govalidatormapper "github.com/ralvarezdev/go-validator/struct/mapper"
+	govalidatormapperparser "github.com/ralvarezdev/go-validator/struct/mapper/parser"
+	govalidatormappervalidation "github.com/ralvarezdev/go-validator/struct/mapper/validation"
 )
 
 type (
 	// Service interface for the validator service
 	Service interface {
 		ValidateRequiredFields(
-			rootStructValidations *govalidatormappervalidations.StructValidations,
+			rootStructValidations *govalidatormappervalidation.StructValidations,
 			mapper *govalidatormapper.Mapper,
 		) error
-		ParseValidations(rootStructValidations *govalidatormappervalidations.StructValidations) (
+		ParseValidations(rootStructValidations *govalidatormappervalidation.StructValidations) (
 			interface{},
 			error,
 		)
 		RunAndParseValidations(
 			body interface{},
-			validatorFns ...func(*govalidatormappervalidations.StructValidations) error,
+			validatorFns ...func(*govalidatormappervalidation.StructValidations) error,
 		) (interface{}, error)
 	}
 
 	// DefaultService struct
 	DefaultService struct {
 		parser    govalidatormapperparser.Parser
-		validator govalidatormappervalidator.Validator
+		validator Validator
 	}
 )
 
 // NewDefaultService creates a new default validator service
 func NewDefaultService(
 	parser govalidatormapperparser.Parser,
-	validator govalidatormappervalidator.Validator,
+	validator Validator,
 ) (*DefaultService, error) {
 	// Check if the parser or the validator is nil
 	if parser == nil {
 		return nil, govalidatormapperparser.ErrNilParser
 	}
 	if validator == nil {
-		return nil, govalidatormappervalidator.ErrNilValidator
+		return nil, ErrNilValidator
 	}
 
 	return &DefaultService{
@@ -52,7 +51,7 @@ func NewDefaultService(
 
 // ValidateRequiredFields validates the required fields
 func (d *DefaultService) ValidateRequiredFields(
-	rootStructValidations *govalidatormappervalidations.StructValidations,
+	rootStructValidations *govalidatormappervalidation.StructValidations,
 	mapper *govalidatormapper.Mapper,
 ) error {
 	return d.validator.ValidateRequiredFields(
@@ -63,7 +62,7 @@ func (d *DefaultService) ValidateRequiredFields(
 
 // ParseValidations parses the validations
 func (d *DefaultService) ParseValidations(
-	rootStructValidations *govalidatormappervalidations.StructValidations,
+	rootStructValidations *govalidatormappervalidation.StructValidations,
 ) (interface{}, error) {
 	// Check if there are any failed validations
 	if !rootStructValidations.HasFailed() {
@@ -81,10 +80,10 @@ func (d *DefaultService) ParseValidations(
 // RunAndParseValidations runs and parses the validations
 func (d *DefaultService) RunAndParseValidations(
 	body interface{},
-	validatorFns ...func(*govalidatormappervalidations.StructValidations) error,
+	validatorFns ...func(*govalidatormappervalidation.StructValidations) error,
 ) (interface{}, error) {
 	// Initialize struct fields validations from the request body
-	rootStructValidations, err := govalidatormappervalidations.NewStructValidations(body)
+	rootStructValidations, err := govalidatormappervalidation.NewStructValidations(body)
 	if err != nil {
 		return nil, err
 	}

@@ -3,7 +3,7 @@ package json
 import (
 	"fmt"
 	gostringsconvert "github.com/ralvarezdev/go-strings/convert"
-	govalidatormappervalidations "github.com/ralvarezdev/go-validator/structs/mapper/validations"
+	govalidatormappervalidation "github.com/ralvarezdev/go-validator/struct/mapper/validation"
 )
 
 type (
@@ -297,12 +297,12 @@ func NewParser(logger *Logger) *Parser {
 
 // GenerateParsedValidations returns a
 func (p *Parser) GenerateParsedValidations(
-	rootStructValidations *govalidatormappervalidations.StructValidations,
+	rootStructValidations *govalidatormappervalidation.StructValidations,
 	rootStructParsedValidations *StructParsedValidations,
 ) error {
 	// Check if the root struct validations or the root struct parsed validations are nil
 	if rootStructValidations == nil {
-		return govalidatormappervalidations.ErrNilStructValidations
+		return govalidatormappervalidation.ErrNilStructValidations
 	}
 	if rootStructParsedValidations == nil {
 		return ErrNilParsedValidations
@@ -395,7 +395,7 @@ func (p *Parser) GenerateParsedValidations(
 }
 
 // ParseValidations parses the validations into JSON
-func (p *Parser) ParseValidations(rootStructValidations *govalidatormappervalidations.StructValidations) (
+func (p *Parser) ParseValidations(rootStructValidations *govalidatormappervalidation.StructValidations) (
 	interface{},
 	error,
 ) {

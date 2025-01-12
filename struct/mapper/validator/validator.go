@@ -2,8 +2,8 @@ package validator
 
 import (
 	"fmt"
-	govalidatormapper "github.com/ralvarezdev/go-validator/structs/mapper"
-	govalidatormappervalidations "github.com/ralvarezdev/go-validator/structs/mapper/validations"
+	govalidatormapper "github.com/ralvarezdev/go-validator/struct/mapper"
+	govalidatormappervalidations "github.com/ralvarezdev/go-validator/struct/mapper/validation"
 	"reflect"
 )
 

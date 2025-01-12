@@ -1,4 +1,4 @@
-package validations
+package validation
 
 import (
 	goreflect "github.com/ralvarezdev/go-reflect"
