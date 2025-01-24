@@ -84,6 +84,15 @@ func (d *DefaultValidator) ValidateRequiredFields(
 		// Get the field tag name
 		fieldTagName, ok := mapper.GetFieldTagName(fieldName)
 		if !ok {
+			// Print field
+			if d.logger != nil {
+				d.logger.FieldTagNameNotFound(
+					structTypeName,
+					fieldName,
+					fieldType,
+					fieldValue,
+				)
+			}
 			return fmt.Errorf(ErrFieldTagNameNotFound, fieldName)
 		}
 
@@ -131,7 +140,7 @@ func (d *DefaultValidator) ValidateRequiredFields(
 		}
 
 		// Check if the field is a scalar required or optional field
-		if fieldValue.Kind() != reflect.Ptr || fieldValue.Elem().Kind() != reflect.Struct {
+		if fieldValue.Kind() != reflect.Ptr && fieldValue.Elem().Kind() != reflect.Struct {
 			continue
 		}
 

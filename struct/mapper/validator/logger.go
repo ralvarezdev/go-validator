@@ -53,3 +53,17 @@ func (l *Logger) UninitializedField(
 		fmt.Sprintf("field is required: '%v'", required),
 	)
 }
+
+// FieldTagNameNotFound prints the field tag name not found on debug mode
+func (l *Logger) FieldTagNameNotFound(
+	structTypeName, fieldName string,
+	fieldType reflect.Type,
+	fieldValue interface{},
+) {
+	l.logger.Debug(
+		"field tag name not found on struct type: "+structTypeName,
+		"field name: "+fieldName,
+		fmt.Sprintf("field type: '%v'", fieldType),
+		fmt.Sprintf("field value: '%v'", fieldValue),
+	)
+}
