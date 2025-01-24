@@ -140,7 +140,11 @@ func (d *DefaultValidator) ValidateRequiredFields(
 		}
 
 		// Check if the field is a scalar required or optional field
-		if fieldValue.Kind() != reflect.Ptr && fieldValue.Elem().Kind() != reflect.Struct {
+		if fieldValue.Kind() != reflect.Ptr {
+			if fieldType.Kind() != reflect.Struct {
+				continue
+			}
+		} else if fieldValue.Elem().Kind() != reflect.Struct {
 			continue
 		}
 
