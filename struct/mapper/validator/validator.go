@@ -157,7 +157,7 @@ func (d *DefaultValidator) ValidateRequiredFields(
 		// Initialize the nested struct mapper validations
 		nestedStructValidations, err := govalidatormappervalidations.NewNestedStructValidations(
 			fieldName,
-			fieldValue,
+			fieldValue.Interface(),
 		)
 		if err != nil {
 			return err
