@@ -269,8 +269,7 @@ func (f *FlattenedParsedValidations) AddRootStructParsedValidations(
 
 			// Get the nested struct flattened JSON parsed validations
 			nestedStructFlattenedParsedValidations := NewFlattenedParsedValidations()
-			err := nestedStructFlattenedParsedValidations.AddNestedStructParsedValidations(
-				fieldName,
+			err := nestedStructFlattenedParsedValidations.AddRootStructParsedValidations(
 				nestedStructParsedValidations,
 			)
 			if err != nil {
