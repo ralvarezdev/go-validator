@@ -17,10 +17,10 @@ type (
 			interface{},
 			error,
 		)
-		RunAndParseValidations(
+		Validate(
 			body interface{},
 			validatorFns ...func(*govalidatormappervalidation.StructValidations) error,
-		) (interface{}, error)
+		) func() (interface{}, error)
 	}
 
 	// DefaultService struct
@@ -77,24 +77,29 @@ func (d *DefaultService) ParseValidations(
 	return parsedValidations, nil
 }
 
-// RunAndParseValidations runs and parses the validations
-func (d *DefaultService) RunAndParseValidations(
+// Validate validates the request body using the validator functions
+func (d *DefaultService) Validate(
 	body interface{},
 	validatorFns ...func(*govalidatormappervalidation.StructValidations) error,
-) (interface{}, error) {
-	// Initialize struct fields validations from the request body
-	rootStructValidations, err := govalidatormappervalidation.NewStructValidations(body)
-	if err != nil {
-		return nil, err
-	}
-
-	// Run the validator functions
-	for _, validatorFn := range validatorFns {
-		if err = validatorFn(rootStructValidations); err != nil {
+) func() (interface{}, error) {
+	return func() (
+		interface{},
+		error,
+	) {
+		// Initialize struct fields validations from the request body
+		rootStructValidations, err := govalidatormappervalidation.NewStructValidations(body)
+		if err != nil {
 			return nil, err
 		}
-	}
 
-	// Parse the validations
-	return d.ParseValidations(rootStructValidations)
+		// Run the validator functions
+		for _, validatorFn := range validatorFns {
+			if err = validatorFn(rootStructValidations); err != nil {
+				return nil, err
+			}
+		}
+
+		// Parse the validations
+		return d.ParseValidations(rootStructValidations)
+	}
 }
