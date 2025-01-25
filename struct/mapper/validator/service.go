@@ -19,6 +19,7 @@ type (
 		)
 		Validate(
 			body interface{},
+			mapper *govalidatormapper.Mapper,
 			validatorFns ...func(*govalidatormappervalidation.StructValidations) error,
 		) func() (interface{}, error)
 	}
@@ -77,9 +78,11 @@ func (d *DefaultService) ParseValidations(
 	return parsedValidations, nil
 }
 
-// Validate validates the request body using the validator functions
+// Validate validates the request body using the validator functions provided
+// and returns the parsed validations. It validates the required fields by default
 func (d *DefaultService) Validate(
 	body interface{},
+	mapper *govalidatormapper.Mapper,
 	validatorFns ...func(*govalidatormappervalidation.StructValidations) error,
 ) func() (interface{}, error) {
 	return func() (
@@ -89,6 +92,14 @@ func (d *DefaultService) Validate(
 		// Initialize struct fields validations from the request body
 		rootStructValidations, err := govalidatormappervalidation.NewStructValidations(body)
 		if err != nil {
+			return nil, err
+		}
+
+		// Validate the required fields
+		if err = d.ValidateRequiredFields(
+			rootStructValidations,
+			mapper,
+		); err != nil {
 			return nil, err
 		}
 
