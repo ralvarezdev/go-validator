@@ -38,6 +38,7 @@ type (
 	// Generator is an interface for creating a mapper
 	Generator interface {
 		NewMapper(structInstance interface{}) (*Mapper, error)
+		NewMapperWithNoError(structInstance interface{}) *Mapper
 	}
 
 	// ProtobufGenerator is a generator for Protobuf mappers
@@ -275,6 +276,12 @@ func (p *ProtobufGenerator) NewMapper(structInstance interface{}) (
 	return rootMapper, nil
 }
 
+// NewMapperWithNoError creates the fields to validate from a Protobuf compiled struct
+func (p *ProtobufGenerator) NewMapperWithNoError(structInstance interface{}) *Mapper {
+	mapper, _ := p.NewMapper(structInstance)
+	return mapper
+}
+
 // NewMapper creates the fields to validate from a JSON struct
 func (j *JSONGenerator) NewMapper(structInstance interface{}) (
 	*Mapper,
@@ -365,4 +372,10 @@ func (j *JSONGenerator) NewMapper(structInstance interface{}) (
 	}
 
 	return rootMapper, nil
+}
+
+// NewMapperWithNoError creates the fields to validate from a JSON struct
+func (j *JSONGenerator) NewMapperWithNoError(structInstance interface{}) *Mapper {
+	mapper, _ := j.NewMapper(structInstance)
+	return mapper
 }
