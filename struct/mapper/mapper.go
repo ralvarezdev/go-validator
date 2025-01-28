@@ -160,14 +160,14 @@ func (m *Mapper) AddFieldNestedMapper(fieldName string, nestedMapper *Mapper) {
 // NewProtobufGenerator creates a new Protobuf generator
 func NewProtobufGenerator(logger *Logger) *ProtobufGenerator {
 	return &ProtobufGenerator{
-		logger: logger,
+		logger,
 	}
 }
 
 // NewJSONGenerator creates a new JSON generator
 func NewJSONGenerator(logger *Logger) *JSONGenerator {
 	return &JSONGenerator{
-		logger: logger,
+		logger,
 	}
 }
 

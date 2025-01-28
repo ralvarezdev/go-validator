@@ -45,8 +45,8 @@ func NewDefaultService(
 	}
 
 	return &DefaultService{
-		parser:    parser,
-		validator: validator,
+		parser,
+		validator,
 	}, nil
 }
 

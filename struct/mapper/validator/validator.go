@@ -27,7 +27,7 @@ func NewDefaultValidator(
 	logger *Logger,
 ) *DefaultValidator {
 	return &DefaultValidator{
-		logger: logger,
+		logger,
 	}
 }
 
