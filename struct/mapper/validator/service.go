@@ -21,9 +21,11 @@ type (
 		CreateValidateFn(
 			mapper *govalidatormapper.Mapper,
 			validationsFns ...func(*govalidatormappervalidation.StructValidations) error,
-		) func(
-			dest interface{},
-		) (interface{}, error)
+		) (
+			func(
+				dest interface{},
+			) (interface{}, error), error,
+		)
 	}
 
 	// DefaultService struct
@@ -85,9 +87,16 @@ func (d *DefaultService) ParseValidations(
 func (d *DefaultService) CreateValidateFn(
 	mapper *govalidatormapper.Mapper,
 	validationsFns ...func(*govalidatormappervalidation.StructValidations) error,
-) func(
-	dest interface{},
-) (interface{}, error) {
+) (
+	func(
+		dest interface{},
+	) (interface{}, error), error,
+) {
+	// Check if the mapper is nil
+	if mapper == nil {
+		return nil, govalidatormapper.ErrNilMapper
+	}
+
 	return func(
 		dest interface{},
 	) (
@@ -125,5 +134,5 @@ func (d *DefaultService) CreateValidateFn(
 
 		// Parse the validations
 		return d.ParseValidations(rootStructValidations)
-	}
+	}, nil
 }
