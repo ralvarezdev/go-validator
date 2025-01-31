@@ -4,6 +4,7 @@ import (
 	govalidatormapper "github.com/ralvarezdev/go-validator/struct/mapper"
 	govalidatormapperparser "github.com/ralvarezdev/go-validator/struct/mapper/parser"
 	govalidatormappervalidation "github.com/ralvarezdev/go-validator/struct/mapper/validation"
+	"reflect"
 )
 
 type (
@@ -17,11 +18,12 @@ type (
 			interface{},
 			error,
 		)
-		Validate(
-			body interface{},
+		CreateValidateFn(
 			mapper *govalidatormapper.Mapper,
-			validatorFns ...func(*govalidatormappervalidation.StructValidations) error,
-		) func() (interface{}, error)
+			validationsFns ...func(*govalidatormappervalidation.StructValidations) error,
+		) func(
+			dest interface{},
+		) (interface{}, error)
 	}
 
 	// DefaultService struct
@@ -78,19 +80,30 @@ func (d *DefaultService) ParseValidations(
 	return parsedValidations, nil
 }
 
-// Validate validates the request body using the validator functions provided
-// and returns the parsed validations. It validates the required fields by default
-func (d *DefaultService) Validate(
-	body interface{},
+// CreateValidateFn creates a validate function for the request body using the validator
+// functions provided. It validates the required fields by default
+func (d *DefaultService) CreateValidateFn(
 	mapper *govalidatormapper.Mapper,
-	validatorFns ...func(*govalidatormappervalidation.StructValidations) error,
-) func() (interface{}, error) {
-	return func() (
+	validationsFns ...func(*govalidatormappervalidation.StructValidations) error,
+) func(
+	dest interface{},
+) (interface{}, error) {
+	return func(
+		dest interface{},
+	) (
 		interface{},
 		error,
 	) {
+		// Check if the destination is a pointer
+		if dest == nil {
+			return nil, ErrNilDestination
+		}
+		if reflect.TypeOf(dest).Kind() != reflect.Ptr {
+			return nil, ErrDestinationNotPointer
+		}
+
 		// Initialize struct fields validations from the request body
-		rootStructValidations, err := govalidatormappervalidation.NewStructValidations(body)
+		rootStructValidations, err := govalidatormappervalidation.NewStructValidations(dest)
 		if err != nil {
 			return nil, err
 		}
@@ -104,7 +117,7 @@ func (d *DefaultService) Validate(
 		}
 
 		// Run the validator functions
-		for _, validatorFn := range validatorFns {
+		for _, validatorFn := range validationsFns {
 			if err = validatorFn(rootStructValidations); err != nil {
 				return nil, err
 			}
