@@ -26,12 +26,12 @@ type (
 			emailField string,
 			email string,
 			validations *govalidatormappervalidation.StructValidations,
-		) error
+		)
 		Birthdate(
 			birthdateField string,
 			birthdate *time.Time,
 			validations *govalidatormappervalidation.StructValidations,
-		) error
+		)
 		CreateValidateFn(
 			mapper *govalidatormapper.Mapper,
 			auxiliaryValidatorFns ...interface{},
@@ -101,14 +101,13 @@ func (d *DefaultService) Email(
 	emailField string,
 	email string,
 	validations *govalidatormappervalidation.StructValidations,
-) error {
+) {
 	if _, err := govalidatorfieldmail.ValidMailAddress(email); err != nil {
 		validations.AddFieldValidationError(
 			emailField,
 			govalidatorfieldmail.ErrInvalidMailAddress,
 		)
 	}
-	return nil
 }
 
 // Birthdate validates the birthdate field
@@ -116,14 +115,13 @@ func (d *DefaultService) Birthdate(
 	birthdateField string,
 	birthdate *time.Time,
 	validations *govalidatormappervalidation.StructValidations,
-) error {
+) {
 	if birthdate == nil || birthdate.After(time.Now()) {
 		validations.AddFieldValidationError(
 			birthdateField,
 			govalidatorfieldbirthdate.ErrInvalidBirthdate,
 		)
 	}
-	return nil
 }
 
 // CreateValidateFn creates a validate function for the request body using the validator
