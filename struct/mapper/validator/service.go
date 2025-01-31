@@ -34,7 +34,7 @@ type (
 		) error
 		CreateValidateFn(
 			mapper *govalidatormapper.Mapper,
-			auxiliaryValidatorFn interface{},
+			auxiliaryValidatorFns ...interface{},
 		) (
 			func(
 				dest interface{},
@@ -134,7 +134,7 @@ func (d *DefaultService) Birthdate(
 // func(dest *RequestType, validations *govalidatormappervalidation.StructValidations) error
 func (d *DefaultService) CreateValidateFn(
 	mapper *govalidatormapper.Mapper,
-	auxiliaryValidatorFn interface{},
+	auxiliaryValidatorFns ...interface{},
 ) (
 	func(
 		dest interface{},
@@ -174,13 +174,15 @@ func (d *DefaultService) CreateValidateFn(
 		}
 
 		// Call the validate function
-		_, err = goreflect.SafeCallFunction(
-			auxiliaryValidatorFn,
-			dest,
-			rootStructValidations,
-		)
-		if err != nil {
-			panic(err)
+		for _, auxiliaryValidatorFn := range auxiliaryValidatorFns {
+			_, err = goreflect.SafeCallFunction(
+				auxiliaryValidatorFn,
+				dest,
+				rootStructValidations,
+			)
+			if err != nil {
+				panic(err)
+			}
 		}
 
 		// Parse the validations
