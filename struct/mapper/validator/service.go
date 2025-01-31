@@ -1,6 +1,7 @@
 package validator
 
 import (
+	goreflect "github.com/ralvarezdev/go-reflect"
 	govalidatorfieldbirthdate "github.com/ralvarezdev/go-validator/struct/field/birthdate"
 	govalidatorfieldmail "github.com/ralvarezdev/go-validator/struct/field/mail"
 	govalidatormapper "github.com/ralvarezdev/go-validator/struct/mapper"
@@ -33,7 +34,7 @@ type (
 		) error
 		CreateValidateFn(
 			mapper *govalidatormapper.Mapper,
-			validationsFns ...func(*govalidatormappervalidation.StructValidations) error,
+			auxiliaryValidatorFn interface{},
 		) (
 			func(
 				dest interface{},
@@ -127,9 +128,13 @@ func (d *DefaultService) Birthdate(
 
 // CreateValidateFn creates a validate function for the request body using the validator
 // functions provided. It validates the required fields by default
+//
+// The auxiliary validator function should have the following signature:
+//
+// func(dest *RequestType, validations *govalidatormappervalidation.StructValidations) error
 func (d *DefaultService) CreateValidateFn(
 	mapper *govalidatormapper.Mapper,
-	validationsFns ...func(*govalidatormappervalidation.StructValidations) error,
+	auxiliaryValidatorFn interface{},
 ) (
 	func(
 		dest interface{},
@@ -168,11 +173,14 @@ func (d *DefaultService) CreateValidateFn(
 			return nil, err
 		}
 
-		// Run the validator functions
-		for _, validatorFn := range validationsFns {
-			if err = validatorFn(rootStructValidations); err != nil {
-				return nil, err
-			}
+		// Call the validate function
+		_, err = goreflect.SafeCallFunction(
+			auxiliaryValidatorFn,
+			dest,
+			rootStructValidations,
+		)
+		if err != nil {
+			panic(err)
 		}
 
 		// Parse the validations
