@@ -1,9 +1,12 @@
 package validator
 
 import (
+	"fmt"
 	goreflect "github.com/ralvarezdev/go-reflect"
+	gostringscount "github.com/ralvarezdev/go-strings/count"
 	govalidatorfieldbirthdate "github.com/ralvarezdev/go-validator/struct/field/birthdate"
 	govalidatorfieldmail "github.com/ralvarezdev/go-validator/struct/field/mail"
+	govalidatorfieldpassword "github.com/ralvarezdev/go-validator/struct/field/password"
 	govalidatormapper "github.com/ralvarezdev/go-validator/struct/mapper"
 	govalidatormapperparser "github.com/ralvarezdev/go-validator/struct/mapper/parser"
 	govalidatormappervalidation "github.com/ralvarezdev/go-validator/struct/mapper/validation"
@@ -29,7 +32,14 @@ type (
 		)
 		Birthdate(
 			birthdateField string,
-			birthdate *time.Time,
+			birthdate time.Time,
+			options *BirthdateOptions,
+			validations *govalidatormappervalidation.StructValidations,
+		)
+		Password(
+			passwordField string,
+			password string,
+			options *PasswordOptions,
 			validations *govalidatormappervalidation.StructValidations,
 		)
 		CreateValidateFn(
@@ -46,6 +56,20 @@ type (
 	DefaultService struct {
 		parser    govalidatormapperparser.Parser
 		validator Validator
+	}
+
+	// BirthdateOptions is the birthdate options struct
+	BirthdateOptions struct {
+		MinimumAge int
+		MaximumAge int
+	}
+
+	// PasswordOptions is the password options struct
+	PasswordOptions struct {
+		MinimumLength       int
+		MinimumSpecialCount int
+		MinimumNumbersCount int
+		MinimumCapsCount    int
 	}
 )
 
@@ -113,14 +137,105 @@ func (d *DefaultService) Email(
 // Birthdate validates the birthdate field
 func (d *DefaultService) Birthdate(
 	birthdateField string,
-	birthdate *time.Time,
+	birthdate time.Time,
+	options *BirthdateOptions,
 	validations *govalidatormappervalidation.StructValidations,
 ) {
-	if birthdate == nil || birthdate.After(time.Now()) {
+	// Check if the birthdate is after the current time
+	if birthdate.After(time.Now()) {
 		validations.AddFieldValidationError(
 			birthdateField,
 			govalidatorfieldbirthdate.ErrInvalidBirthdate,
 		)
+	}
+
+	// Check if the birthdate options are nil
+	if options == nil {
+		return
+	}
+
+	// Check if the birthdate is before the minimum age
+	if options.MinimumAge > 0 {
+		if time.Now().AddDate(-options.MinimumAge, 0, 0).Before(birthdate) {
+			validations.AddFieldValidationError(
+				birthdateField,
+				fmt.Errorf(
+					govalidatorfieldbirthdate.ErrMinimumAge,
+					options.MinimumAge,
+				),
+			)
+		}
+	}
+
+	// Check if the birthdate is after the maximum age
+	if options.MaximumAge > 0 {
+		if time.Now().AddDate(-options.MaximumAge, 0, 0).After(birthdate) {
+			validations.AddFieldValidationError(
+				birthdateField,
+				fmt.Errorf(
+					govalidatorfieldbirthdate.ErrMaximumAge,
+					options.MaximumAge,
+				),
+			)
+		}
+	}
+}
+
+// Password validates the password field
+func (d *DefaultService) Password(
+	passwordField string,
+	password string,
+	options *PasswordOptions,
+	validations *govalidatormappervalidation.StructValidations,
+) {
+	// Check if the password length is less than the minimum length
+	if options.MinimumLength > 0 && len(password) < options.MinimumLength {
+		validations.AddFieldValidationError(
+			passwordField,
+			fmt.Errorf(
+				govalidatorfieldpassword.ErrMinimumLength,
+				options.MinimumLength,
+			),
+		)
+	}
+
+	// Check if the password contains the minimum special characters
+	if options.MinimumSpecialCount > 0 {
+		if count := gostringscount.Special(password); count < options.MinimumSpecialCount {
+			validations.AddFieldValidationError(
+				passwordField,
+				fmt.Errorf(
+					govalidatorfieldpassword.ErrMinimumSpecialCount,
+					options.MinimumSpecialCount,
+				),
+			)
+		}
+	}
+
+	// Check if the password contains the minimum numbers
+	if options.MinimumNumbersCount > 0 {
+		if count := gostringscount.Numbers(password); count < options.MinimumNumbersCount {
+			validations.AddFieldValidationError(
+				passwordField,
+				fmt.Errorf(
+					govalidatorfieldpassword.ErrMinimumNumbersCount,
+					options.MinimumNumbersCount,
+				),
+			)
+		}
+	}
+
+	// Check if the password contains the minimum caps
+	if options.MinimumCapsCount > 0 {
+		if count := gostringscount.Caps(password); count < options.MinimumCapsCount {
+			validations.AddFieldValidationError(
+				passwordField,
+				fmt.Errorf(
+					govalidatorfieldpassword.ErrMinimumCapsCount,
+					options.MinimumCapsCount,
+				),
+			)
+		}
 	}
 }
 
