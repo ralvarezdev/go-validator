@@ -7,10 +7,13 @@ import (
 	govalidatorfieldbirthdate "github.com/ralvarezdev/go-validator/struct/field/birthdate"
 	govalidatorfieldmail "github.com/ralvarezdev/go-validator/struct/field/mail"
 	govalidatorfieldpassword "github.com/ralvarezdev/go-validator/struct/field/password"
+	govalidatorfieldusername "github.com/ralvarezdev/go-validator/struct/field/username"
 	govalidatormapper "github.com/ralvarezdev/go-validator/struct/mapper"
 	govalidatormapperparser "github.com/ralvarezdev/go-validator/struct/mapper/parser"
 	govalidatormappervalidation "github.com/ralvarezdev/go-validator/struct/mapper/validation"
+	"net/mail"
 	"reflect"
+	"strings"
 	"time"
 )
 
@@ -28,6 +31,11 @@ type (
 		Email(
 			emailField string,
 			email string,
+			validations *govalidatormappervalidation.StructValidations,
+		)
+		Username(
+			usernameField string,
+			username string,
 			validations *govalidatormappervalidation.StructValidations,
 		)
 		Birthdate(
@@ -120,13 +128,37 @@ func (d *DefaultService) ParseValidations(
 	return parsedValidations, nil
 }
 
+// Username validates the username field
+func (d *DefaultService) Username(
+	usernameField string,
+	username string,
+	validations *govalidatormappervalidation.StructValidations,
+) {
+	// Check if the username contains a whitespace
+	if strings.Contains(username, " ") {
+		validations.AddFieldValidationError(
+			usernameField,
+			govalidatorfieldusername.ErrFoundWhitespaces,
+		)
+	}
+}
+
 // Email validates the email address field
 func (d *DefaultService) Email(
 	emailField string,
 	email string,
 	validations *govalidatormappervalidation.StructValidations,
 ) {
-	if _, err := govalidatorfieldmail.ValidMailAddress(email); err != nil {
+	// Check if the mail address is empty
+	if email == "" {
+		validations.AddFieldValidationError(
+			emailField,
+			govalidatorfieldmail.ErrInvalidMailAddress,
+		)
+	}
+
+	// Check if the mail address is valid
+	if _, err := mail.ParseAddress(email); err != nil {
 		validations.AddFieldValidationError(
 			emailField,
 			govalidatorfieldmail.ErrInvalidMailAddress,
