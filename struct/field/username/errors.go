@@ -5,5 +5,5 @@ import (
 )
 
 var (
-	ErrFoundWhitespaces = errors.New("username cannot contain whitespaces")
+	ErrMustBeAlphanumeric = errors.New("username must be have alphanumeric characters")
 )

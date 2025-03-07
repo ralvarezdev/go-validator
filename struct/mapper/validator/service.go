@@ -134,11 +134,11 @@ func (d *DefaultService) Username(
 	username string,
 	validations *govalidatormappervalidation.StructValidations,
 ) {
-	// Check if the username contains a whitespace
-	if strings.Contains(username, " ") {
+	// Check if the username contains non-alphanumeric characters
+	if gostringscount.Alphanumeric(username) != len(username) {
 		validations.AddFieldValidationError(
 			usernameField,
-			govalidatorfieldusername.ErrFoundWhitespaces,
+			govalidatorfieldusername.ErrMustBeAlphanumeric,
 		)
 	}
 }
