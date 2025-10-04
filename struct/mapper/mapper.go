@@ -11,13 +11,13 @@ type (
 		structInstance interface{}
 
 		// fields key is the field name and value is the tag name
-		fields *map[string]string
+		fields map[string]string
 
 		// requiredFields key is the field name and value is a boolean to determine if the field is required
-		requiredFields *map[string]bool
+		requiredFields map[string]bool
 
 		// nestedMappers key is the field name of the nested struct and value is the nested mapper
-		nestedMappers *map[string]*Mapper
+		nestedMappers map[string]*Mapper
 	}
 )
 
@@ -62,8 +62,8 @@ func (m *Mapper) Type() reflect.Type {
 //
 // Returns:
 //
-//   - *map[string]string: map of fields where key is the field name and value is the tag name
-func (m *Mapper) GetFieldsTagName() *map[string]string {
+//   - map[string]string: map of fields where key is the field name and value is the tag name
+func (m *Mapper) GetFieldsTagName() map[string]string {
 	if m == nil {
 		return nil
 	}
@@ -94,7 +94,7 @@ func (m *Mapper) GetFieldTagName(fieldName string) (
 	}
 
 	// Check if the field name exists in the map
-	fieldTagName, ok := (*m.fields)[fieldName]
+	fieldTagName, ok := m.fields[fieldName]
 	return fieldTagName, ok
 }
 
@@ -111,19 +111,19 @@ func (m *Mapper) AddFieldTagName(fieldName, fieldTagName string) {
 
 	// Initialize the fields map if it is nil
 	if m.fields == nil {
-		m.fields = &map[string]string{}
+		m.fields = map[string]string{}
 	}
 
 	// Add the field tag name to the map
-	(*m.fields)[fieldName] = fieldTagName
+	m.fields[fieldName] = fieldTagName
 }
 
 // GetRequiredFields returns the required fields of the mapper
 //
 // Returns:
 //
-//   - *map[string]bool: map of required fields where key is the field name and value is a boolean to determine if the field is required
-func (m *Mapper) GetRequiredFields() *map[string]bool {
+//   - map[string]bool: map of required fields where key is the field name and value is a boolean to determine if the field is required
+func (m *Mapper) GetRequiredFields() map[string]bool {
 	if m == nil {
 		return nil
 	}
@@ -151,7 +151,7 @@ func (m *Mapper) IsFieldRequired(fieldName string) (bool, bool) {
 	}
 
 	// Check if the field name exists in the map
-	isFieldRequired, ok := (*m.requiredFields)[fieldName]
+	isFieldRequired, ok := m.requiredFields[fieldName]
 	return isFieldRequired, ok
 }
 
@@ -168,11 +168,11 @@ func (m *Mapper) SetFieldIsRequired(fieldName string, required bool) {
 
 	// Initialize the required fields map if it is nil
 	if m.requiredFields == nil {
-		m.requiredFields = &map[string]bool{}
+		m.requiredFields = map[string]bool{}
 	}
 
 	// Set if the field is required
-	(*m.requiredFields)[fieldName] = required
+	m.requiredFields[fieldName] = required
 }
 
 // HasFieldsValidations returns if the mapper has fields
@@ -191,8 +191,8 @@ func (m *Mapper) HasFieldsValidations() bool {
 //
 // Returns:
 //
-//   - *map[string]*Mapper: map of nested mappers where key is the field name of the nested struct and value is the nested mapper
-func (m *Mapper) GetNestedMappers() *map[string]*Mapper {
+//   - map[string]*Mapper: map of nested mappers where key is the field name of the nested struct and value is the nested mapper
+func (m *Mapper) GetNestedMappers() map[string]*Mapper {
 	if m == nil {
 		return nil
 	}
@@ -218,7 +218,7 @@ func (m *Mapper) GetFieldNestedMapper(fieldName string) *Mapper {
 		return nil
 	}
 
-	return (*m.nestedMappers)[fieldName]
+	return m.nestedMappers[fieldName]
 }
 
 // AddFieldNestedMapper adds a nested mapper to the mapper
@@ -234,9 +234,9 @@ func (m *Mapper) AddFieldNestedMapper(fieldName string, nestedMapper *Mapper) {
 
 	// Initialize the nested mappers map if it is nil
 	if m.nestedMappers == nil {
-		m.nestedMappers = &map[string]*Mapper{}
+		m.nestedMappers = map[string]*Mapper{}
 	}
 
 	// Add the nested mapper to the map
-	(*m.nestedMappers)[fieldName] = nestedMapper
+	m.nestedMappers[fieldName] = nestedMapper
 }
