@@ -114,9 +114,9 @@ func (d DefaultValidator) ValidateRequiredFields(
 			if d.logger != nil {
 				d.logger.Debug(
 					"field tag name not found on struct type: "+structTypeName,
-					slog.String("fieldName", fieldName),
-					slog.String("fieldTagName", fieldTagName),
-					slog.Any("fieldValue", fieldValue),
+					slog.String("field_name", fieldName),
+					slog.String("field_tag_name", fieldTagName),
+					slog.Any("field_value", fieldValue),
 				)
 			}
 			return fmt.Errorf(ErrFieldTagNameNotFound, fieldName)
@@ -136,18 +136,18 @@ func (d DefaultValidator) ValidateRequiredFields(
 			if isInitialized {
 				d.logger.Debug(
 					"detected initialized field on struct type: "+structTypeName,
-					slog.String("fieldName", fieldName),
-					slog.Any("fieldType", fieldType),
-					slog.Any("fieldValue", fieldValue),
-					slog.Bool("fieldIsRequired", isRequired),
+					slog.String("field_name", fieldName),
+					slog.Any("field_type", fieldType),
+					slog.Any("field_value", fieldValue),
+					slog.Bool("field_is_required", isRequired),
 				)
 			} else {
 				d.logger.Debug(
 					"detected uninitialized field on struct type: "+structTypeName,
-					slog.String("fieldName", fieldName),
-					slog.Any("fieldType", fieldType),
-					slog.Any("fieldValue", fieldValue),
-					slog.Bool("fieldIsRequired", isRequired),
+					slog.String("field_name", fieldName),
+					slog.Any("field_type", fieldType),
+					slog.Any("field_value", fieldValue),
+					slog.Bool("field_is_required", isRequired),
 				)
 			}
 		}

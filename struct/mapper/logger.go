@@ -27,10 +27,10 @@ func DetectedField(
 	if logger != nil {
 		logger.Debug(
 			"detected field on struct type: "+structTypeName,
-			slog.String("fieldName", fieldName),
-			slog.Any("fieldType", fmt.Sprintf("%v", fieldType)),
-			slog.String("fieldTag", tag),
-			slog.Bool("fieldRequired", required),
+			slog.String("field_name", fieldName),
+			slog.Any("field_type", fmt.Sprintf("%v", fieldType)),
+			slog.String("field_tag", tag),
+			slog.Bool("field_is_required", required),
 		)
 	}
 }

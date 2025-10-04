@@ -529,7 +529,7 @@ func (p Parser) GenerateParsedValidations(
 				// Log the parsed validations
 				p.logger.Debug(
 					"parsed validations to struct type: "+structTypeName,
-					slog.String("fieldName", fieldName),
+					slog.String("field_name", fieldName),
 					slog.Any("errors", errors),
 				)
 			}
@@ -569,8 +569,11 @@ func (p Parser) GenerateParsedValidations(
 				// Log the parsed validations
 				p.logger.Debug(
 					"parsed validations to struct type: "+structTypeName,
-					slog.String("fieldName", fieldName),
-					slog.String("nestedStructTypeName", nestedStructTypeName),
+					slog.String("field_name", fieldName),
+					slog.String(
+						"nested_struct_type_name",
+						nestedStructTypeName,
+					),
 				)
 			}
 		}
