@@ -2,6 +2,10 @@ package validator
 
 import (
 	"fmt"
+	"net/mail"
+	"reflect"
+	"time"
+
 	goreflect "github.com/ralvarezdev/go-reflect"
 	gostringscount "github.com/ralvarezdev/go-strings/count"
 	govalidatorfieldbirthdate "github.com/ralvarezdev/go-validator/struct/field/birthdate"
@@ -11,13 +15,18 @@ import (
 	govalidatormapper "github.com/ralvarezdev/go-validator/struct/mapper"
 	govalidatormapperparser "github.com/ralvarezdev/go-validator/struct/mapper/parser"
 	govalidatormappervalidation "github.com/ralvarezdev/go-validator/struct/mapper/validation"
-	"net/mail"
-	"reflect"
-	"strings"
-	"time"
 )
 
 type (
+	// AuxiliaryValidatorFn is the type for the auxiliary validator function
+	AuxiliaryValidatorFn func(
+		dest interface{},
+		validations *govalidatormappervalidation.StructValidations,
+	) error
+
+	// ValidateFn is the type for the validate function
+	ValidateFn func(dest interface{}) (interface{}, error)
+
 	// Service interface for the validator service
 	Service interface {
 		ValidateRequiredFields(
@@ -52,11 +61,9 @@ type (
 		)
 		CreateValidateFn(
 			mapper *govalidatormapper.Mapper,
-			auxiliaryValidatorFns ...interface{},
+			auxiliaryValidatorFns ...AuxiliaryValidatorFn,
 		) (
-			func(
-				dest interface{},
-			) (interface{}, error), error,
+			ValidateFn, error,
 		)
 	}
 
@@ -82,6 +89,16 @@ type (
 )
 
 // NewDefaultService creates a new default validator service
+//
+// Parameters:
+//
+//   - parser: the parser to use
+//   - validator: the validator to use
+//
+// Returns:
+//
+//   - *DefaultService: the default validator service
+//   - error: if there was an error creating the service
 func NewDefaultService(
 	parser govalidatormapperparser.Parser,
 	validator Validator,
@@ -101,7 +118,16 @@ func NewDefaultService(
 }
 
 // ValidateRequiredFields validates the required fields
-func (d *DefaultService) ValidateRequiredFields(
+//
+// Parameters:
+//
+//   - rootStructValidations: the root struct validations
+//   - mapper: the mapper to use
+//
+// Returns:
+//
+// - error: if there was an error validating the required fields
+func (d DefaultService) ValidateRequiredFields(
 	rootStructValidations *govalidatormappervalidation.StructValidations,
 	mapper *govalidatormapper.Mapper,
 ) error {
@@ -112,7 +138,16 @@ func (d *DefaultService) ValidateRequiredFields(
 }
 
 // ParseValidations parses the validations
-func (d *DefaultService) ParseValidations(
+//
+// Parameters:
+//
+//   - rootStructValidations: the root struct validations
+//
+// Returns:
+//
+//   - interface{}: the parsed validations
+//   - error: if there was an error parsing the validations
+func (d DefaultService) ParseValidations(
 	rootStructValidations *govalidatormappervalidation.StructValidations,
 ) (interface{}, error) {
 	// Check if there are any failed validations
@@ -129,7 +164,13 @@ func (d *DefaultService) ParseValidations(
 }
 
 // Username validates the username field
-func (d *DefaultService) Username(
+//
+// Parameters:
+//
+//   - usernameField: the username field name
+//   - username: the username to validate
+//   - validations: the struct validations
+func (d DefaultService) Username(
 	usernameField string,
 	username string,
 	validations *govalidatormappervalidation.StructValidations,
@@ -144,7 +185,13 @@ func (d *DefaultService) Username(
 }
 
 // Email validates the email address field
-func (d *DefaultService) Email(
+//
+// Parameters:
+//
+//   - emailField: the email field name
+//   - email: the email to validate
+//   - validations: the struct validations
+func (d DefaultService) Email(
 	emailField string,
 	email string,
 	validations *govalidatormappervalidation.StructValidations,
@@ -167,7 +214,14 @@ func (d *DefaultService) Email(
 }
 
 // Birthdate validates the birthdate field
-func (d *DefaultService) Birthdate(
+//
+// Parameters:
+//
+// - birthdateField: the birthdate field name
+// - birthdate: the birthdate to validate
+// - options: the birthdate options
+// - validations: the struct validations
+func (d DefaultService) Birthdate(
 	birthdateField string,
 	birthdate time.Time,
 	options *BirthdateOptions,
@@ -214,7 +268,14 @@ func (d *DefaultService) Birthdate(
 }
 
 // Password validates the password field
-func (d *DefaultService) Password(
+//
+// Parameters:
+//
+// - passwordField: the password field name
+// - password: the password to validate
+// - options: the password options
+// - validations: the struct validations
+func (d DefaultService) Password(
 	passwordField string,
 	password string,
 	options *PasswordOptions,
@@ -274,16 +335,20 @@ func (d *DefaultService) Password(
 // CreateValidateFn creates a validate function for the request body using the validator
 // functions provided. It validates the required fields by default
 //
-// The auxiliary validator function should have the following signature:
+// Parameters:
 //
-// func(dest *RequestType, validations *govalidatormappervalidation.StructValidations) error
-func (d *DefaultService) CreateValidateFn(
+//   - mapper: the mapper to use
+//   - auxiliaryValidatorFns: the auxiliary validator functions to use
+//
+// Returns:
+//
+//   - ValidateFn: the validate function
+//   - error: if there was an error creating the validate function
+func (d DefaultService) CreateValidateFn(
 	mapper *govalidatormapper.Mapper,
-	auxiliaryValidatorFns ...interface{},
+	auxiliaryValidatorFns ...AuxiliaryValidatorFn,
 ) (
-	func(
-		dest interface{},
-	) (interface{}, error), error,
+	ValidateFn, error,
 ) {
 	// Check if the mapper is nil
 	if mapper == nil {

@@ -2,9 +2,11 @@ package validator
 
 import (
 	"fmt"
+	"log/slog"
+	"reflect"
+
 	govalidatormapper "github.com/ralvarezdev/go-validator/struct/mapper"
 	govalidatormappervalidations "github.com/ralvarezdev/go-validator/struct/mapper/validation"
-	"reflect"
 )
 
 type (
@@ -18,21 +20,44 @@ type (
 
 	// DefaultValidator struct
 	DefaultValidator struct {
-		logger *Logger
+		logger *slog.Logger
 	}
 )
 
 // NewDefaultValidator creates a new default mapper validator
+//
+// Parameters:
+//
+//   - logger: the logger to use
+//
+// Returns:
+//
+//   - *DefaultValidator: the default mapper validator
 func NewDefaultValidator(
-	logger *Logger,
+	logger *slog.Logger,
 ) *DefaultValidator {
+	// Create a sub logger
+	if logger != nil {
+		logger = logger.With(
+			slog.String("component", "struct_mapper_validator"),
+		)
+	}
+
 	return &DefaultValidator{
 		logger,
 	}
 }
 
 // IsFieldInitialized checks if a field is initialized
-func (d *DefaultValidator) IsFieldInitialized(
+//
+// Parameters:
+//
+//   - fieldValue: the field value to check
+//
+// Returns:
+//
+//   - isInitialized: true if the field is initialized, false otherwise
+func (d DefaultValidator) IsFieldInitialized(
 	fieldValue reflect.Value,
 ) (isInitialized bool) {
 	// Check if the field is not a pointer and is initialized
@@ -52,7 +77,16 @@ func (d *DefaultValidator) IsFieldInitialized(
 }
 
 // ValidateRequiredFields validates the required fields of a struct
-func (d *DefaultValidator) ValidateRequiredFields(
+//
+// Parameters:
+//
+//   - rootStructValidations: the root struct validations to validate
+//   - mapper: the struct mapper to use
+//
+// Returns:
+//
+//   - err: error if any
+func (d DefaultValidator) ValidateRequiredFields(
 	rootStructValidations *govalidatormappervalidations.StructValidations,
 	mapper *govalidatormapper.Mapper,
 ) error {
@@ -86,11 +120,11 @@ func (d *DefaultValidator) ValidateRequiredFields(
 		if !ok {
 			// Print field
 			if d.logger != nil {
-				d.logger.FieldTagNameNotFound(
-					structTypeName,
-					fieldName,
-					fieldType,
-					fieldValue,
+				d.logger.Debug(
+					"field tag name not found on struct type: "+structTypeName,
+					slog.String("fieldName", fieldName),
+					slog.String("fieldTagName", fieldTagName),
+					slog.Any("fieldValue", fieldValue),
 				)
 			}
 			return fmt.Errorf(ErrFieldTagNameNotFound, fieldName)
@@ -108,19 +142,20 @@ func (d *DefaultValidator) ValidateRequiredFields(
 		// Print field
 		if d.logger != nil {
 			if isInitialized {
-				d.logger.InitializedField(
-					structTypeName,
-					fieldName,
-					fieldType,
-					fieldValue,
-					isRequired,
+				d.logger.Debug(
+					"detected initialized field on struct type: "+structTypeName,
+					slog.String("fieldName", fieldName),
+					slog.Any("fieldType", fieldType),
+					slog.Any("fieldValue", fieldValue),
+					slog.Bool("fieldIsRequired", isRequired),
 				)
 			} else {
-				d.logger.UninitializedField(
-					structTypeName,
-					fieldName,
-					fieldType,
-					isRequired,
+				d.logger.Debug(
+					"detected uninitialized field on struct type: "+structTypeName,
+					slog.String("fieldName", fieldName),
+					slog.Any("fieldType", fieldType),
+					slog.Any("fieldValue", fieldValue),
+					slog.Bool("fieldIsRequired", isRequired),
 				)
 			}
 		}
