@@ -27,46 +27,6 @@ type (
 	// ValidateFn is the type for the validate function
 	ValidateFn func(dest interface{}) (interface{}, error)
 
-	// Service interface for the validator service
-	Service interface {
-		ValidateRequiredFields(
-			rootStructValidations *govalidatormappervalidation.StructValidations,
-			mapper *govalidatormapper.Mapper,
-		) error
-		ParseValidations(rootStructValidations *govalidatormappervalidation.StructValidations) (
-			interface{},
-			error,
-		)
-		Email(
-			emailField string,
-			email string,
-			validations *govalidatormappervalidation.StructValidations,
-		)
-		Username(
-			usernameField string,
-			username string,
-			validations *govalidatormappervalidation.StructValidations,
-		)
-		Birthdate(
-			birthdateField string,
-			birthdate time.Time,
-			options *BirthdateOptions,
-			validations *govalidatormappervalidation.StructValidations,
-		)
-		Password(
-			passwordField string,
-			password string,
-			options *PasswordOptions,
-			validations *govalidatormappervalidation.StructValidations,
-		)
-		CreateValidateFn(
-			mapper *govalidatormapper.Mapper,
-			auxiliaryValidatorFns ...AuxiliaryValidatorFn,
-		) (
-			ValidateFn, error,
-		)
-	}
-
 	// DefaultService struct
 	DefaultService struct {
 		parser    govalidatormapperparser.Parser

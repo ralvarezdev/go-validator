@@ -1,0 +1,152 @@
+package mapper
+
+import (
+	"fmt"
+	"log/slog"
+	"reflect"
+	"strings"
+
+	goreflect "github.com/ralvarezdev/go-reflect"
+)
+
+type (
+	// JSONGenerator is a generator for JSON mappers
+	JSONGenerator struct {
+		logger *slog.Logger
+	}
+)
+
+// NewJSONGenerator creates a new JSON generator
+//
+// Parameters:
+//
+//   - logger: optional logger to use for logging detected fields
+//
+// Returns:
+//
+//   - *JSONGenerator: instance of the JSON generator
+func NewJSONGenerator(logger *slog.Logger) *JSONGenerator {
+	if logger != nil {
+		// Create a sub logger
+		logger = logger.With(
+			slog.String("component", "struct_mapper_json_generator"),
+		)
+	}
+
+	return &JSONGenerator{
+		logger,
+	}
+}
+
+// NewMapper creates the fields to validate from a JSON struct
+//
+// Parameters:
+//
+//   - structInstance: instance of the JSON struct
+//
+// Returns:
+//
+//   - *Mapper: instance of the mapper
+//   - error: error if any
+func (j JSONGenerator) NewMapper(structInstance interface{}) (
+	*Mapper,
+	error,
+) {
+	// Reflection of data
+	reflectedType := goreflect.GetDereferencedType(structInstance)
+
+	// Get the struct type name
+	structTypeName := reflectedType.Name()
+
+	// Initialize the root map of fields and the map of nested mappers
+	rootMapper := NewMapper(structInstance)
+
+	// Reflection of the type of data
+	var jsonTag string
+	var jsonName string
+	for i := 0; i < reflectedType.NumField(); i++ {
+		// Get the field type through reflection
+		structField := reflectedType.Field(i)
+		fieldType := structField.Type
+		fieldTag := structField.Tag
+		fieldName := structField.Name
+
+		// Get the JSON tag of the field
+		jsonTag = fieldTag.Get(JSONTag)
+
+		// Get the field name from the JSON tag
+		tagParts := strings.Split(jsonTag, ",")
+		if len(tagParts) == 0 {
+			return nil, fmt.Errorf(ErrEmptyJSONTag, fieldName)
+		}
+		jsonName = tagParts[0]
+
+		// Add field tag name to the map and set the field as parsed
+		rootMapper.AddFieldTagName(fieldName, jsonName)
+
+		// Check if the JSON tag is unassigned or if it contains 'omitempty', which means it is an optional field
+		if jsonTag == "-" || strings.Contains(jsonTag, JSONOmitempty) {
+			// Set field name as not required
+			rootMapper.SetFieldIsRequired(fieldName, false)
+
+			// Print field
+			DetectedField(
+				structTypeName,
+				fieldName,
+				fieldType,
+				jsonTag,
+				false,
+				j.logger,
+			)
+			continue
+		}
+
+		// Set field name as required
+		rootMapper.SetFieldIsRequired(fieldName, true)
+
+		// Dereference the pointer
+		if fieldType.Kind() == reflect.Ptr {
+			fieldType = fieldType.Elem()
+		}
+
+		// Check if the element type is a struct
+		if fieldType.Kind() == reflect.Struct {
+			// Create a new Mapper for the nested struct field
+			fieldNestedMapper, err := j.NewMapper(
+				reflect.New(fieldType).Interface(),
+			)
+			if err != nil {
+				return nil, err
+			}
+
+			// Add the nested fields to the map
+			rootMapper.AddFieldNestedMapper(fieldName, fieldNestedMapper)
+		}
+
+		// Print field
+		DetectedField(
+			structTypeName,
+			fieldName,
+			fieldType,
+			jsonTag,
+			true,
+			j.logger,
+		)
+	}
+
+	return rootMapper, nil
+}
+
+// NewMapperWithNoError creates the fields to validate from a JSON struct
+//
+// Parameters:
+//
+//   - structInstance: instance of the JSON struct
+//
+// Returns:
+//
+//   - *Mapper: instance of the mapper
+func (j JSONGenerator) NewMapperWithNoError(structInstance interface{}) *Mapper {
+	mapper, _ := j.NewMapper(structInstance)
+	return mapper
+}

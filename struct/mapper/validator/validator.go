@@ -6,18 +6,10 @@ import (
 	"reflect"
 
 	govalidatormapper "github.com/ralvarezdev/go-validator/struct/mapper"
-	govalidatormappervalidations "github.com/ralvarezdev/go-validator/struct/mapper/validation"
+	govalidatormappervalidation "github.com/ralvarezdev/go-validator/struct/mapper/validation"
 )
 
 type (
-	// Validator interface
-	Validator interface {
-		ValidateRequiredFields(
-			rootStructValidations *govalidatormappervalidations.StructValidations,
-			mapper *govalidatormapper.Mapper,
-		) (err error)
-	}
-
 	// DefaultValidator struct
 	DefaultValidator struct {
 		logger *slog.Logger
@@ -87,12 +79,12 @@ func (d DefaultValidator) IsFieldInitialized(
 //
 //   - err: error if any
 func (d DefaultValidator) ValidateRequiredFields(
-	rootStructValidations *govalidatormappervalidations.StructValidations,
+	rootStructValidations *govalidatormappervalidation.StructValidations,
 	mapper *govalidatormapper.Mapper,
 ) error {
 	// Check if either the root struct validations, data or the struct fields to validate are nil
 	if rootStructValidations == nil {
-		return govalidatormappervalidations.ErrNilStructValidations
+		return govalidatormappervalidation.ErrNilStructValidations
 	}
 	if mapper == nil {
 		return ErrNilMapper
@@ -190,7 +182,7 @@ func (d DefaultValidator) ValidateRequiredFields(
 		}
 
 		// Initialize the nested struct mapper validations
-		nestedStructValidations, err := govalidatormappervalidations.NewNestedStructValidations(
+		nestedStructValidations, err := govalidatormappervalidation.NewNestedStructValidations(
 			fieldName,
 			fieldValue.Interface(),
 		)
