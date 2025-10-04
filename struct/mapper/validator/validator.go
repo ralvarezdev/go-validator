@@ -113,7 +113,8 @@ func (d DefaultValidator) ValidateRequiredFields(
 			// Print field
 			if d.logger != nil {
 				d.logger.Debug(
-					"field tag name not found on struct type: "+structTypeName,
+					"field tag name not found on struct type",
+					slog.String("struct_type", structTypeName),
 					slog.String("field_name", fieldName),
 					slog.String("field_tag_name", fieldTagName),
 					slog.Any("field_value", fieldValue),
@@ -135,7 +136,8 @@ func (d DefaultValidator) ValidateRequiredFields(
 		if d.logger != nil {
 			if isInitialized {
 				d.logger.Debug(
-					"detected initialized field on struct type: "+structTypeName,
+					"detected initialized field on struct type",
+					slog.String("struct_type", structTypeName),
 					slog.String("field_name", fieldName),
 					slog.Any("field_type", fieldType),
 					slog.Any("field_value", fieldValue),
@@ -143,7 +145,8 @@ func (d DefaultValidator) ValidateRequiredFields(
 				)
 			} else {
 				d.logger.Debug(
-					"detected uninitialized field on struct type: "+structTypeName,
+					"detected uninitialized field on struct type",
+					slog.String("struct_type", structTypeName),
 					slog.String("field_name", fieldName),
 					slog.Any("field_type", fieldType),
 					slog.Any("field_value", fieldValue),

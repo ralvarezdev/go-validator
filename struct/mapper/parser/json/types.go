@@ -523,7 +523,8 @@ func (p Parser) GenerateParsedValidations(
 
 				// Log the parsed validations
 				p.logger.Debug(
-					"parsed validations to struct type: "+structTypeName,
+					"parsed validations to struct type",
+					slog.String("struct_type", structTypeName),
 					slog.String("field_name", fieldName),
 					slog.Any("errors", errors),
 				)
