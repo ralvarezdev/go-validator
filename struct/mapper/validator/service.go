@@ -2,6 +2,7 @@ package validator
 
 import (
 	"fmt"
+	"log/slog"
 	"net/mail"
 	"reflect"
 	"time"
@@ -18,19 +19,11 @@ import (
 )
 
 type (
-	// AuxiliaryValidatorFn is the type for the auxiliary validator function
-	AuxiliaryValidatorFn func(
-		dest interface{},
-		validations *govalidatormappervalidation.StructValidations,
-	) error
-
-	// ValidateFn is the type for the validate function
-	ValidateFn func(dest interface{}) (interface{}, error)
-
 	// DefaultService struct
 	DefaultService struct {
 		parser    govalidatormapperparser.Parser
 		validator Validator
+		logger    *slog.Logger
 	}
 
 	// BirthdateOptions is the birthdate options struct
@@ -54,6 +47,7 @@ type (
 //
 //   - parser: the parser to use
 //   - validator: the validator to use
+//   - logger: the logger to use
 //
 // Returns:
 //
@@ -62,6 +56,7 @@ type (
 func NewDefaultService(
 	parser govalidatormapperparser.Parser,
 	validator Validator,
+	logger *slog.Logger,
 ) (*DefaultService, error) {
 	// Check if the parser or the validator is nil
 	if parser == nil {
@@ -71,9 +66,14 @@ func NewDefaultService(
 		return nil, ErrNilValidator
 	}
 
+	if logger != nil {
+		logger = logger.With(slog.String("component", "validator_service"))
+	}
+
 	return &DefaultService{
 		parser,
 		validator,
+		logger,
 	}, nil
 }
 
@@ -316,21 +316,21 @@ func (d DefaultService) CreateValidateFn(
 	}
 
 	return func(
-		dest interface{},
+		toValidate interface{},
 	) (
 		interface{},
 		error,
 	) {
 		// Check if the destination is a pointer
-		if dest == nil {
+		if toValidate == nil {
 			return nil, ErrNilDestination
 		}
-		if reflect.TypeOf(dest).Kind() != reflect.Ptr {
+		if reflect.TypeOf(toValidate).Kind() != reflect.Ptr {
 			return nil, ErrDestinationNotPointer
 		}
 
 		// Initialize struct fields validations from the request body
-		rootStructValidations, err := govalidatormappervalidation.NewStructValidations(dest)
+		rootStructValidations, err := govalidatormappervalidation.NewStructValidations(toValidate)
 		if err != nil {
 			return nil, err
 		}
@@ -347,11 +347,17 @@ func (d DefaultService) CreateValidateFn(
 		for _, auxiliaryValidatorFn := range auxiliaryValidatorFns {
 			_, err = goreflect.SafeCallFunction(
 				auxiliaryValidatorFn,
-				dest,
+				toValidate,
 				rootStructValidations,
 			)
 			if err != nil {
-				panic(err)
+				if d.logger != nil {
+					d.logger.Error(
+						"error calling auxiliary validator function",
+						slog.String("error", err.Error()),
+					)
+				}
+				return nil, err
 			}
 		}
 
