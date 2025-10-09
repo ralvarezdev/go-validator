@@ -346,7 +346,7 @@ func (d *DefaultService) CreateValidateFn(
 	}
 
 	// Check if the cache parameter is true, if so call try to get the validate function from the cache
-	if cache {
+	if cache && d.validateFns != nil {
 		if validateFn, ok := d.validateFns[goreflect.UniqueTypeReference(mapper.GetStructInstance())]; ok {
 			return validateFn, nil
 		}
