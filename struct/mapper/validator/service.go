@@ -21,9 +21,10 @@ import (
 type (
 	// DefaultService struct
 	DefaultService struct {
-		parser    govalidatormapperparser.Parser
-		validator Validator
-		logger    *slog.Logger
+		parser      govalidatormapperparser.Parser
+		validator   Validator
+		validateFns map[string]ValidateFn
+		logger      *slog.Logger
 	}
 
 	// BirthdateOptions is the birthdate options struct
@@ -73,6 +74,7 @@ func NewDefaultService(
 	return &DefaultService{
 		parser,
 		validator,
+		nil,
 		logger,
 	}, nil
 }
@@ -87,10 +89,13 @@ func NewDefaultService(
 // Returns:
 //
 // - error: if there was an error validating the required fields
-func (d DefaultService) ValidateRequiredFields(
+func (d *DefaultService) ValidateRequiredFields(
 	rootStructValidations *govalidatormappervalidation.StructValidations,
 	mapper *govalidatormapper.Mapper,
 ) error {
+	if d == nil {
+		return ErrNilService
+	}
 	return d.validator.ValidateRequiredFields(
 		rootStructValidations,
 		mapper,
@@ -107,9 +112,13 @@ func (d DefaultService) ValidateRequiredFields(
 //
 //   - interface{}: the parsed validations
 //   - error: if there was an error parsing the validations
-func (d DefaultService) ParseValidations(
+func (d *DefaultService) ParseValidations(
 	rootStructValidations *govalidatormappervalidation.StructValidations,
 ) (interface{}, error) {
+	if d == nil {
+		return nil, ErrNilService
+	}
+
 	// Check if there are any failed validations
 	if !rootStructValidations.HasFailed() {
 		return nil, nil
@@ -130,11 +139,15 @@ func (d DefaultService) ParseValidations(
 //   - usernameField: the username field name
 //   - username: the username to validate
 //   - validations: the struct validations
-func (d DefaultService) Username(
+func (d *DefaultService) Username(
 	usernameField string,
 	username string,
 	validations *govalidatormappervalidation.StructValidations,
 ) {
+	if d == nil {
+		return
+	}
+
 	// Check if the username contains non-alphanumeric characters
 	if gostringscount.Alphanumeric(username) != len(username) {
 		validations.AddFieldValidationError(
@@ -151,11 +164,15 @@ func (d DefaultService) Username(
 //   - emailField: the email field name
 //   - email: the email to validate
 //   - validations: the struct validations
-func (d DefaultService) Email(
+func (d *DefaultService) Email(
 	emailField string,
 	email string,
 	validations *govalidatormappervalidation.StructValidations,
 ) {
+	if d == nil {
+		return
+	}
+
 	// Check if the mail address is empty
 	if email == "" {
 		validations.AddFieldValidationError(
@@ -181,12 +198,16 @@ func (d DefaultService) Email(
 // - birthdate: the birthdate to validate
 // - options: the birthdate options
 // - validations: the struct validations
-func (d DefaultService) Birthdate(
+func (d *DefaultService) Birthdate(
 	birthdateField string,
 	birthdate time.Time,
 	options *BirthdateOptions,
 	validations *govalidatormappervalidation.StructValidations,
 ) {
+	if d == nil {
+		return
+	}
+
 	// Check if the birthdate is after the current time
 	if birthdate.After(time.Now()) {
 		validations.AddFieldValidationError(
@@ -235,12 +256,16 @@ func (d DefaultService) Birthdate(
 // - password: the password to validate
 // - options: the password options
 // - validations: the struct validations
-func (d DefaultService) Password(
+func (d *DefaultService) Password(
 	passwordField string,
 	password string,
 	options *PasswordOptions,
 	validations *govalidatormappervalidation.StructValidations,
 ) {
+	if d == nil {
+		return
+	}
+
 	// Check if the password length is less than the minimum length
 	if options.MinimumLength > 0 && len(password) < options.MinimumLength {
 		validations.AddFieldValidationError(
@@ -292,8 +317,7 @@ func (d DefaultService) Password(
 	}
 }
 
-// CreateValidateFn creates a validate function for the request body using the validator
-// functions provided. It validates the required fields by default
+// CreateValidateFn creates a validate function for a given mapper
 //
 // Parameters:
 //
@@ -304,12 +328,16 @@ func (d DefaultService) Password(
 //
 //   - ValidateFn: the validate function
 //   - error: if there was an error creating the validate function
-func (d DefaultService) CreateValidateFn(
+func (d *DefaultService) CreateValidateFn(
 	mapper *govalidatormapper.Mapper,
 	auxiliaryValidatorFns ...AuxiliaryValidatorFn,
 ) (
 	ValidateFn, error,
 ) {
+	if d == nil {
+		return nil, ErrNilService
+	}
+
 	// Check if the mapper is nil
 	if mapper == nil {
 		return nil, govalidatormapper.ErrNilMapper
@@ -364,4 +392,89 @@ func (d DefaultService) CreateValidateFn(
 		// Parse the validations
 		return d.ParseValidations(rootStructValidations)
 	}, nil
+}
+
+// CreateAndCacheValidateFn creates and caches a validate function for a given mapper
+//
+// Parameters:
+//
+//   - mapper: the mapper to use
+//   - auxiliaryValidatorFns: auxiliary validator functions to use in the validation
+//
+// Returns:
+//
+//   - ValidateFn: the validate function
+//   - error: if there was an error creating the validate function
+func (d *DefaultService) CreateAndCacheValidateFn(
+	mapper *govalidatormapper.Mapper,
+	auxiliaryValidatorFns ...AuxiliaryValidatorFn,
+) (ValidateFn, error) {
+	if d == nil {
+		return nil, ErrNilService
+	}
+
+	// Check if the mapper is nil
+	if mapper == nil {
+		return nil, govalidatormapper.ErrNilMapper
+	}
+
+	// Get the instance from the mapper
+	instance := mapper.GetStructInstance()
+
+	// Get the unique string representation of the mapper
+	uniqueReference := goreflect.UniqueTypeReference(instance)
+
+	// Check if the validate function is already cached
+	if validateFn, ok := d.validateFns[uniqueReference]; ok {
+		return validateFn, nil
+	}
+
+	// Create the validate function
+	validateFn, err := d.CreateValidateFn(
+		mapper,
+		auxiliaryValidatorFns...,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	// Cache the validate function
+	if d.validateFns == nil {
+		d.validateFns = make(map[string]ValidateFn)
+	}
+	d.validateFns[uniqueReference] = validateFn
+
+	return validateFn, nil
+}
+
+// Validate is the function that creates (if not cached), caches and executes the validation
+//
+// Parameters:
+//
+//   - mapper: the mapper to use
+//   - auxiliaryValidatorFns: auxiliary validator functions to use in the validation
+//
+// Returns:
+//
+//   - interface{}: the parsed validations
+//   - error: if there was an error validating the request
+func (d *DefaultService) Validate(
+	mapper *govalidatormapper.Mapper,
+	auxiliaryValidatorFns ...AuxiliaryValidatorFn,
+) (interface{}, error) {
+	if d == nil {
+		return nil, ErrNilService
+	}
+
+	// Create and cache the validate function
+	validateFn, err := d.CreateAndCacheValidateFn(
+		mapper,
+		auxiliaryValidatorFns...,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	// Execute the validate function
+	return validateFn(mapper)
 }
