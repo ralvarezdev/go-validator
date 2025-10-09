@@ -322,6 +322,7 @@ func (d *DefaultService) Password(
 // Parameters:
 //
 //   - mapper: the mapper to use
+//   - cache: whether to cache the validate function or not
 //   - auxiliaryValidatorFns: the auxiliary validator functions to use
 //
 // Returns:
@@ -330,6 +331,7 @@ func (d *DefaultService) Password(
 //   - error: if there was an error creating the validate function
 func (d *DefaultService) CreateValidateFn(
 	mapper *govalidatormapper.Mapper,
+	cache bool,
 	auxiliaryValidatorFns ...AuxiliaryValidatorFn,
 ) (
 	ValidateFn, error,
@@ -343,7 +345,15 @@ func (d *DefaultService) CreateValidateFn(
 		return nil, govalidatormapper.ErrNilMapper
 	}
 
-	return func(
+	// Check if the cache parameter is true, if so call try to get the validate function from the cache
+	if cache {
+		if validateFn, ok := d.validateFns[goreflect.UniqueTypeReference(mapper.GetStructInstance())]; ok {
+			return validateFn, nil
+		}
+	}
+
+	// Create the validate function
+	validateFn := func(
 		toValidate interface{},
 	) (
 		interface{},
@@ -391,58 +401,15 @@ func (d *DefaultService) CreateValidateFn(
 
 		// Parse the validations
 		return d.ParseValidations(rootStructValidations)
-	}, nil
-}
-
-// CreateAndCacheValidateFn creates and caches a validate function for a given mapper
-//
-// Parameters:
-//
-//   - mapper: the mapper to use
-//   - auxiliaryValidatorFns: auxiliary validator functions to use in the validation
-//
-// Returns:
-//
-//   - ValidateFn: the validate function
-//   - error: if there was an error creating the validate function
-func (d *DefaultService) CreateAndCacheValidateFn(
-	mapper *govalidatormapper.Mapper,
-	auxiliaryValidatorFns ...AuxiliaryValidatorFn,
-) (ValidateFn, error) {
-	if d == nil {
-		return nil, ErrNilService
 	}
 
-	// Check if the mapper is nil
-	if mapper == nil {
-		return nil, govalidatormapper.ErrNilMapper
+	// If cache is true, cache the validate function
+	if cache {
+		if d.validateFns == nil {
+			d.validateFns = make(map[string]ValidateFn)
+		}
+		d.validateFns[goreflect.UniqueTypeReference(mapper.GetStructInstance())] = validateFn
 	}
-
-	// Get the instance from the mapper
-	instance := mapper.GetStructInstance()
-
-	// Get the unique string representation of the mapper
-	uniqueReference := goreflect.UniqueTypeReference(instance)
-
-	// Check if the validate function is already cached
-	if validateFn, ok := d.validateFns[uniqueReference]; ok {
-		return validateFn, nil
-	}
-
-	// Create the validate function
-	validateFn, err := d.CreateValidateFn(
-		mapper,
-		auxiliaryValidatorFns...,
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	// Cache the validate function
-	if d.validateFns == nil {
-		d.validateFns = make(map[string]ValidateFn)
-	}
-	d.validateFns[uniqueReference] = validateFn
 
 	return validateFn, nil
 }
@@ -467,8 +434,9 @@ func (d *DefaultService) Validate(
 	}
 
 	// Create and cache the validate function
-	validateFn, err := d.CreateAndCacheValidateFn(
+	validateFn, err := d.CreateValidateFn(
 		mapper,
+		true,
 		auxiliaryValidatorFns...,
 	)
 	if err != nil {

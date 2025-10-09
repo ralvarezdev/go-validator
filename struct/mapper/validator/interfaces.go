@@ -42,14 +42,11 @@ type (
 		)
 		CreateValidateFn(
 			mapper *govalidatormapper.Mapper,
+			cache bool,
 			auxiliaryValidatorFns ...AuxiliaryValidatorFn,
 		) (
 			ValidateFn, error,
 		)
-		CreateAndCacheValidateFnFromMapper(
-			mapper *govalidatormapper.Mapper,
-			auxiliaryValidatorFns ...AuxiliaryValidatorFn,
-		) (ValidateFn, error)
 		Validate(
 			mapper *govalidatormapper.Mapper,
 			auxiliaryValidatorFns ...AuxiliaryValidatorFn,
