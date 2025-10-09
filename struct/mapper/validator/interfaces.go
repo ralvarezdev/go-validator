@@ -43,13 +43,13 @@ type (
 		CreateValidateFn(
 			mapper *govalidatormapper.Mapper,
 			cache bool,
-			auxiliaryValidatorFns ...AuxiliaryValidatorFn,
+			auxiliaryValidatorFns ...interface{},
 		) (
 			ValidateFn, error,
 		)
 		Validate(
 			mapper *govalidatormapper.Mapper,
-			auxiliaryValidatorFns ...AuxiliaryValidatorFn,
+			auxiliaryValidatorFns ...interface{},
 		) (interface{}, error)
 	}
 

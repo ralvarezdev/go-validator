@@ -332,7 +332,7 @@ func (d *DefaultService) Password(
 func (d *DefaultService) CreateValidateFn(
 	mapper *govalidatormapper.Mapper,
 	cache bool,
-	auxiliaryValidatorFns ...AuxiliaryValidatorFn,
+	auxiliaryValidatorFns ...interface{},
 ) (
 	ValidateFn, error,
 ) {
@@ -427,7 +427,7 @@ func (d *DefaultService) CreateValidateFn(
 //   - error: if there was an error validating the request
 func (d *DefaultService) Validate(
 	mapper *govalidatormapper.Mapper,
-	auxiliaryValidatorFns ...AuxiliaryValidatorFn,
+	auxiliaryValidatorFns ...interface{},
 ) (interface{}, error) {
 	if d == nil {
 		return nil, ErrNilService
