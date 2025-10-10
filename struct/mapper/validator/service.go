@@ -21,7 +21,8 @@ import (
 type (
 	// DefaultService struct
 	DefaultService struct {
-		parser      govalidatormapperparser.Parser
+		rawParser   govalidatormapperparser.RawParser
+		endParser   govalidatormapperparser.EndParser
 		validator   Validator
 		validateFns map[string]ValidateFn
 		logger      *slog.Logger
@@ -46,7 +47,8 @@ type (
 //
 // Parameters:
 //
-//   - parser: the parser to use
+//   - rawParser: the raw parser to use
+//   - endParser: the end parser to use
 //   - validator: the validator to use
 //   - logger: the logger to use
 //
@@ -55,13 +57,17 @@ type (
 //   - *DefaultService: the default validator service
 //   - error: if there was an error creating the service
 func NewDefaultService(
-	parser govalidatormapperparser.Parser,
+	rawParser govalidatormapperparser.RawParser,
+	endParser govalidatormapperparser.EndParser,
 	validator Validator,
 	logger *slog.Logger,
 ) (*DefaultService, error) {
-	// Check if the parser or the validator is nil
-	if parser == nil {
-		return nil, govalidatormapperparser.ErrNilParser
+	// Check if the raw parser, end parser or the validator is nil
+	if rawParser == nil {
+		return nil, govalidatormapperparser.ErrNilRawParser
+	}
+	if endParser == nil {
+		return nil, govalidatormapperparser.ErrNilEndParser
 	}
 	if validator == nil {
 		return nil, ErrNilValidator
@@ -72,10 +78,10 @@ func NewDefaultService(
 	}
 
 	return &DefaultService{
-		parser,
-		validator,
-		nil,
-		logger,
+		rawParser: rawParser,
+		endParser: endParser,
+		validator: validator,
+		logger:    logger,
 	}, nil
 }
 
@@ -124,8 +130,19 @@ func (d *DefaultService) ParseValidations(
 		return nil, nil
 	}
 
-	// Get the parsed validations from the validations
-	parsedValidations, err := d.parser.ParseValidations(rootStructValidations)
+	// Generate the parsed validations using the raw parser
+	structParsedValidations := govalidatormapperparser.NewStructParsedValidations(
+		rootStructValidations.GetStructTypeName(),
+	)
+	if err := d.rawParser.ParseValidations(
+		rootStructValidations,
+		structParsedValidations,
+	); err != nil {
+		return nil, err
+	}
+
+	// Generate the parsed validations using the end parser
+	parsedValidations, err := d.endParser.ParseValidations(structParsedValidations)
 	if err != nil {
 		return nil, err
 	}
