@@ -29,7 +29,8 @@ type (
 
 	// DefaultParser is a struct that holds the parser
 	DefaultParser struct {
-		logger *slog.Logger
+		parsedValidationsConverter func(interface{}) interface{}
+		logger                     *slog.Logger
 	}
 )
 
@@ -438,16 +439,20 @@ func (f *FlattenedParsedValidations) GetFields() map[string]interface{} {
 	return f.fields
 }
 
-// NewParser creates a new DefaultParser struct
+// NewDefaultParser creates a new DefaultParser struct
 //
 // Parameters:
 //
+//   - parsedValidationsConverter: The converter to use to convert the parsed validations
 //   - logger: The logger to use
 //
 // Returns:
 //
 //   - *DefaultParser: The new DefaultParser struct
-func NewParser(logger *slog.Logger) *DefaultParser {
+func NewDefaultParser(
+	parsedValidationsConverter func(interface{}) interface{},
+	logger *slog.Logger,
+) *DefaultParser {
 	if logger != nil {
 		// Create a sub logger
 		logger = logger.With(
@@ -455,7 +460,10 @@ func NewParser(logger *slog.Logger) *DefaultParser {
 		)
 	}
 
-	return &DefaultParser{logger: logger}
+	return &DefaultParser{
+		logger:                     logger,
+		parsedValidationsConverter: parsedValidationsConverter,
+	}
 }
 
 // GenerateParsedValidations returns the parsed validations from the struct validations
@@ -613,5 +621,10 @@ func (d DefaultParser) ParseValidations(rootStructValidations *govalidatormapper
 		return nil, err
 	}
 
-	return flattenedParsedValidations.GetFields(), nil
+	// Convert the parsed validations if a converter is provided
+	parsedValidations := flattenedParsedValidations.GetFields()
+	if d.parsedValidationsConverter != nil {
+		return d.parsedValidationsConverter(parsedValidations), nil
+	}
+	return parsedValidations, nil
 }
