@@ -9,13 +9,13 @@ import (
 
 	goreflect "github.com/ralvarezdev/go-reflect"
 	gostringscount "github.com/ralvarezdev/go-strings/count"
-	govalidatorfieldbirthdate "github.com/ralvarezdev/go-validator/struct/field/birthdate"
-	govalidatorfieldmail "github.com/ralvarezdev/go-validator/struct/field/mail"
-	govalidatorfieldpassword "github.com/ralvarezdev/go-validator/struct/field/password"
-	govalidatorfieldusername "github.com/ralvarezdev/go-validator/struct/field/username"
-	govalidatormapper "github.com/ralvarezdev/go-validator/struct/mapper"
-	govalidatormapperparser "github.com/ralvarezdev/go-validator/struct/mapper/parser"
-	govalidatormappervalidation "github.com/ralvarezdev/go-validator/struct/mapper/validation"
+	govalidatorfieldbirthdate "github.com/ralvarezdev/go-validator/field/birthdate"
+	govalidatorfieldmail "github.com/ralvarezdev/go-validator/field/mail"
+	govalidatorfieldpassword "github.com/ralvarezdev/go-validator/field/password"
+	govalidatorfieldusername "github.com/ralvarezdev/go-validator/field/username"
+	govalidatormapper "github.com/ralvarezdev/go-validator/mapper"
+	govalidatormapperparser "github.com/ralvarezdev/go-validator/mapper/parser"
+	govalidatormappervalidation "github.com/ralvarezdev/go-validator/mapper/validation"
 )
 
 type (

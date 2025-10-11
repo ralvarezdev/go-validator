@@ -3,7 +3,7 @@ package grpc
 import (
 	"fmt"
 
-	govalidatormapperparser "github.com/ralvarezdev/go-validator/struct/mapper/parser"
+	govalidatormapperparser "github.com/ralvarezdev/go-validator/mapper/parser"
 	"google.golang.org/genproto/googleapis/rpc/errdetails"
 )
 

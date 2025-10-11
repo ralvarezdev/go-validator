@@ -4,7 +4,7 @@ import (
 	"log/slog"
 
 	gostringsconvert "github.com/ralvarezdev/go-strings/convert"
-	govalidatormappervalidation "github.com/ralvarezdev/go-validator/struct/mapper/validation"
+	govalidatormappervalidation "github.com/ralvarezdev/go-validator/mapper/validation"
 )
 
 type (

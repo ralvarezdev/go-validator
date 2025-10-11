@@ -1,7 +1,7 @@
 package parser
 
 import (
-	govalidatormappervalidation "github.com/ralvarezdev/go-validator/struct/mapper/validation"
+	govalidatormappervalidation "github.com/ralvarezdev/go-validator/mapper/validation"
 )
 
 type (

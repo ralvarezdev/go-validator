@@ -3,7 +3,7 @@ package json
 import (
 	"fmt"
 
-	govalidatormapperparser "github.com/ralvarezdev/go-validator/struct/mapper/parser"
+	govalidatormapperparser "github.com/ralvarezdev/go-validator/mapper/parser"
 )
 
 type (
