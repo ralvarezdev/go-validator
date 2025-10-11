@@ -268,7 +268,7 @@ func (f *FieldParsedValidations) GetErrors() []string {
 	return f.errors
 }
 
-// NewDefaultParser creates a new DefaultRawParser struct
+// NewDefaultRawParser creates a new DefaultRawParser struct
 //
 // Parameters:
 //
@@ -277,7 +277,7 @@ func (f *FieldParsedValidations) GetErrors() []string {
 // Returns:
 //
 //   - *DefaultRawParser: The new DefaultRawParser struct
-func NewDefaultParser(
+func NewDefaultRawParser(
 	logger *slog.Logger,
 ) *DefaultRawParser {
 	if logger != nil {
@@ -311,7 +311,7 @@ func (d DefaultRawParser) ParseValidations(
 		return govalidatormappervalidation.ErrNilStructValidations
 	}
 	if dest == nil {
-		return ErrNilParsedValidations
+		return ErrNilStructParsedValidations
 	}
 
 	// Check if there are failed validations
