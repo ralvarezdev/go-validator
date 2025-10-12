@@ -31,13 +31,11 @@ type (
 		Birthdate(
 			birthdateField string,
 			birthdate time.Time,
-			options *BirthdateOptions,
 			validations *govalidatormappervalidation.StructValidations,
 		)
 		Password(
 			passwordField string,
 			password string,
-			options *PasswordOptions,
 			validations *govalidatormappervalidation.StructValidations,
 		)
 		CreateValidateFn(

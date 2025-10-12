@@ -21,11 +21,13 @@ import (
 type (
 	// DefaultService struct
 	DefaultService struct {
-		rawParser   govalidatormapperparser.RawParser
-		endParser   govalidatormapperparser.EndParser
-		validator   Validator
-		validateFns map[string]ValidateFn
-		logger      *slog.Logger
+		rawParser        govalidatormapperparser.RawParser
+		endParser        govalidatormapperparser.EndParser
+		validator        Validator
+		validateFns      map[string]ValidateFn
+		birthdateOptions *BirthdateOptions
+		passwordOptions  *PasswordOptions
+		logger           *slog.Logger
 	}
 
 	// BirthdateOptions is the birthdate options struct
@@ -50,6 +52,8 @@ type (
 //   - rawParser: the raw parser to use
 //   - endParser: the end parser to use
 //   - validator: the validator to use
+//   - birthdateOptions: the default birthdate options (optional, can be nil)
+//   - passwordOptions: the default password options (optional, can be nil)
 //   - logger: the logger to use
 //
 // Returns:
@@ -60,6 +64,8 @@ func NewDefaultService(
 	rawParser govalidatormapperparser.RawParser,
 	endParser govalidatormapperparser.EndParser,
 	validator Validator,
+	birthdateOptions *BirthdateOptions,
+	passwordOptions *PasswordOptions,
 	logger *slog.Logger,
 ) (*DefaultService, error) {
 	// Check if the raw parser, end parser or the validator is nil
@@ -78,10 +84,12 @@ func NewDefaultService(
 	}
 
 	return &DefaultService{
-		rawParser: rawParser,
-		endParser: endParser,
-		validator: validator,
-		logger:    logger,
+		rawParser:        rawParser,
+		endParser:        endParser,
+		validator:        validator,
+		birthdateOptions: birthdateOptions,
+		passwordOptions:  passwordOptions,
+		logger:           logger,
 	}, nil
 }
 
@@ -213,12 +221,10 @@ func (d *DefaultService) Email(
 //
 // - birthdateField: the birthdate field name
 // - birthdate: the birthdate to validate
-// - options: the birthdate options
 // - validations: the struct validations
 func (d *DefaultService) Birthdate(
 	birthdateField string,
 	birthdate time.Time,
-	options *BirthdateOptions,
 	validations *govalidatormappervalidation.StructValidations,
 ) {
 	if d == nil {
@@ -234,31 +240,39 @@ func (d *DefaultService) Birthdate(
 	}
 
 	// Check if the birthdate options are nil
-	if options == nil {
+	if d.birthdateOptions == nil {
 		return
 	}
 
 	// Check if the birthdate is before the minimum age
-	if options.MinimumAge > 0 {
-		if time.Now().AddDate(-options.MinimumAge, 0, 0).Before(birthdate) {
+	if d.birthdateOptions.MinimumAge > 0 {
+		if time.Now().AddDate(
+			-d.birthdateOptions.MinimumAge,
+			0,
+			0,
+		).Before(birthdate) {
 			validations.AddFieldValidationError(
 				birthdateField,
 				fmt.Errorf(
 					govalidatorfieldbirthdate.ErrMinimumAge,
-					options.MinimumAge,
+					d.birthdateOptions.MinimumAge,
 				),
 			)
 		}
 	}
 
 	// Check if the birthdate is after the maximum age
-	if options.MaximumAge > 0 {
-		if time.Now().AddDate(-options.MaximumAge, 0, 0).After(birthdate) {
+	if d.birthdateOptions.MaximumAge > 0 {
+		if time.Now().AddDate(
+			-d.birthdateOptions.MaximumAge,
+			0,
+			0,
+		).After(birthdate) {
 			validations.AddFieldValidationError(
 				birthdateField,
 				fmt.Errorf(
 					govalidatorfieldbirthdate.ErrMaximumAge,
-					options.MaximumAge,
+					d.birthdateOptions.MaximumAge,
 				),
 			)
 		}
@@ -271,12 +285,10 @@ func (d *DefaultService) Birthdate(
 //
 // - passwordField: the password field name
 // - password: the password to validate
-// - options: the password options
 // - validations: the struct validations
 func (d *DefaultService) Password(
 	passwordField string,
 	password string,
-	options *PasswordOptions,
 	validations *govalidatormappervalidation.StructValidations,
 ) {
 	if d == nil {
@@ -284,50 +296,50 @@ func (d *DefaultService) Password(
 	}
 
 	// Check if the password length is less than the minimum length
-	if options.MinimumLength > 0 && len(password) < options.MinimumLength {
+	if d.passwordOptions.MinimumLength > 0 && len(password) < d.passwordOptions.MinimumLength {
 		validations.AddFieldValidationError(
 			passwordField,
 			fmt.Errorf(
 				govalidatorfieldpassword.ErrMinimumLength,
-				options.MinimumLength,
+				d.passwordOptions.MinimumLength,
 			),
 		)
 	}
 
 	// Check if the password contains the minimum special characters
-	if options.MinimumSpecialCount > 0 {
-		if count := gostringscount.Special(password); count < options.MinimumSpecialCount {
+	if d.passwordOptions.MinimumSpecialCount > 0 {
+		if count := gostringscount.Special(password); count < d.passwordOptions.MinimumSpecialCount {
 			validations.AddFieldValidationError(
 				passwordField,
 				fmt.Errorf(
 					govalidatorfieldpassword.ErrMinimumSpecialCount,
-					options.MinimumSpecialCount,
+					d.passwordOptions.MinimumSpecialCount,
 				),
 			)
 		}
 	}
 
 	// Check if the password contains the minimum numbers
-	if options.MinimumNumbersCount > 0 {
-		if count := gostringscount.Numbers(password); count < options.MinimumNumbersCount {
+	if d.passwordOptions.MinimumNumbersCount > 0 {
+		if count := gostringscount.Numbers(password); count < d.passwordOptions.MinimumNumbersCount {
 			validations.AddFieldValidationError(
 				passwordField,
 				fmt.Errorf(
 					govalidatorfieldpassword.ErrMinimumNumbersCount,
-					options.MinimumNumbersCount,
+					d.passwordOptions.MinimumNumbersCount,
 				),
 			)
 		}
 	}
 
 	// Check if the password contains the minimum caps
-	if options.MinimumCapsCount > 0 {
-		if count := gostringscount.Caps(password); count < options.MinimumCapsCount {
+	if d.passwordOptions.MinimumCapsCount > 0 {
+		if count := gostringscount.Caps(password); count < d.passwordOptions.MinimumCapsCount {
 			validations.AddFieldValidationError(
 				passwordField,
 				fmt.Errorf(
 					govalidatorfieldpassword.ErrMinimumCapsCount,
-					options.MinimumCapsCount,
+					d.passwordOptions.MinimumCapsCount,
 				),
 			)
 		}
