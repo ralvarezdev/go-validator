@@ -80,13 +80,7 @@ func (p ProtobufGenerator) NewMapper(structInstance interface{}) (
 		}
 
 		// Get the field name from the Protobuf tag
-		var protobufName string
-		for _, part := range strings.Split(protobufTag, ",") {
-			if strings.HasPrefix(part, ProtobufNamePrefix) {
-				protobufName = strings.TrimPrefix(part, ProtobufNamePrefix)
-				break
-			}
-		}
+		protobufName := GetProtobufTagName(protobufTag)
 
 		// Check if the field name is empty
 		if protobufName == "" {
@@ -102,10 +96,7 @@ func (p ProtobufGenerator) NewMapper(structInstance interface{}) (
 			fieldType = fieldType.Elem()
 
 			// Check if the element type is not a struct and the tag to determine if it contains 'oneof', which means it is an optional struct field
-			if fieldType.Kind() != reflect.Struct || strings.Contains(
-				protobufTag,
-				ProtobufOneOf,
-			) {
+			if fieldType.Kind() != reflect.Struct || IsProtobufFieldOptional(protobufTag) {
 				// Set field as not required
 				rootMapper.SetFieldIsRequired(fieldName, false)
 
@@ -131,6 +122,23 @@ func (p ProtobufGenerator) NewMapper(structInstance interface{}) (
 
 			// Add the nested fields to the map
 			rootMapper.AddFieldNestedMapper(fieldName, fieldNestedMapper)
+		}
+
+		// Check if the field is an interface (special case for oneof fields)
+		if fieldType.Kind() == reflect.Interface {
+			// Set field as not required
+			rootMapper.SetFieldIsRequired(fieldName, false)
+
+			// Print field
+			DetectedField(
+				structTypeName,
+				fieldName,
+				fieldType,
+				protobufTag,
+				false,
+				p.logger,
+			)
+			continue
 		}
 
 		// Set field as required
@@ -162,4 +170,38 @@ func (p ProtobufGenerator) NewMapper(structInstance interface{}) (
 func (p ProtobufGenerator) NewMapperWithNoError(structInstance interface{}) *Mapper {
 	mapper, _ := p.NewMapper(structInstance)
 	return mapper
+}
+
+// GetProtobufTagName returns the Protobuf tag name for a given struct field name
+//
+// Parameters:
+//
+//   - protobufTag: The Protobuf tag of the struct field
+//
+// Returns:
+//
+//   - string: Protobuf tag name
+func GetProtobufTagName(protobufTag string) string {
+	for _, part := range strings.Split(protobufTag, ",") {
+		if strings.HasPrefix(part, ProtobufNamePrefix) {
+			return strings.TrimPrefix(part, ProtobufNamePrefix)
+		}
+	}
+	return ""
+}
+
+// IsProtobufFieldOptional returns true if the Protobuf field is optional
+//
+// Parameters:
+//
+//   - protobufTag: The Protobuf tag of the struct field
+//
+// Returns:
+//
+//   - bool: true if the Protobuf field is optional
+func IsProtobufFieldOptional(protobufTag string) bool {
+	return strings.Contains(
+		protobufTag,
+		ProtobufOneOf,
+	)
 }
