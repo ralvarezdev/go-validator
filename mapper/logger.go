@@ -26,7 +26,7 @@ func DetectedField(
 ) {
 	if logger != nil {
 		logger.Debug(
-			"detected field on struct type",
+			"Detected field on struct type",
 			slog.String("struct_type", structTypeName),
 			slog.String("field_name", fieldName),
 			slog.Any("field_type", fmt.Sprintf("%v", fieldType)),

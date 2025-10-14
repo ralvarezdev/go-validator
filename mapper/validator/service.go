@@ -420,7 +420,7 @@ func (d *DefaultService) CreateValidateFn(
 			if err != nil {
 				if d.logger != nil {
 					d.logger.Error(
-						"error calling auxiliary validator function",
+						"Error calling auxiliary validator function",
 						slog.String("error", err.Error()),
 					)
 				}

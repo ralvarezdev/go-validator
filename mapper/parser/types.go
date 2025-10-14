@@ -357,7 +357,7 @@ func (d DefaultRawParser) ParseValidations(
 
 				// Log the parsed validations
 				d.logger.Debug(
-					"parsed validations to struct type",
+					"Parsed validations to struct type",
 					slog.String("struct_type", structTypeName),
 					slog.String("field_name", fieldName),
 					slog.Any("errors", errors),
@@ -398,7 +398,7 @@ func (d DefaultRawParser) ParseValidations(
 			if d.logger != nil {
 				// Log the parsed validations
 				d.logger.Debug(
-					"parsed validations to struct type: "+structTypeName,
+					"Parsed validations to struct type: "+structTypeName,
 					slog.String("field_name", fieldName),
 					slog.String(
 						"nested_struct_type_name",
