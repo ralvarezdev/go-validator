@@ -9,7 +9,7 @@ import (
 type (
 	// FlattenedParsedValidations is the struct for the flattened parsed validations
 	FlattenedParsedValidations struct {
-		fields map[string]interface{}
+		fields map[string]any
 	}
 
 	// DefaultEndParser is the default implementation of the EndParser interface
@@ -24,7 +24,8 @@ type (
 //
 // Returns:
 //
-//   - error: An error if the root struct parsed validations are nil or if the fields are already in the flattened parsed validations
+// - error: An error if the root struct parsed validations are nil or if the fields are already in the flattened parsed
+// validations
 func NewFlattenedParsedValidations(
 	structParsedValidations *govalidatormapperparser.StructParsedValidations,
 ) (*FlattenedParsedValidations, error) {
@@ -35,34 +36,30 @@ func NewFlattenedParsedValidations(
 
 	// Create the flattened parsed validations
 	f := &FlattenedParsedValidations{
-		fields: make(map[string]interface{}),
+		fields: make(map[string]any),
 	}
 
 	// Add the struct parsed validations fields
 	fieldsParsedValidations := structParsedValidations.GetFields()
-	if fieldsParsedValidations != nil {
-		for fieldName, fieldParsedValidations := range fieldsParsedValidations {
-			// Add the field parsed validations
-			if err := f.AddField(
-				fieldName,
-				fieldParsedValidations,
-			); err != nil {
-				return nil, err
-			}
+	for fieldName, fieldParsedValidations := range fieldsParsedValidations {
+		// Add the field parsed validations
+		if err := f.AddField(
+			fieldName,
+			fieldParsedValidations,
+		); err != nil {
+			return nil, err
 		}
 	}
 
 	// Add the struct parsed validations nested structs
 	nestedStructsParsedValidations := structParsedValidations.GetNestedStructs()
-	if nestedStructsParsedValidations != nil {
-		for fieldName, nestedStructParsedValidations := range nestedStructsParsedValidations {
-			// Add the nested struct parsed validations
-			if err := f.AddNestedStruct(
-				fieldName,
-				nestedStructParsedValidations,
-			); err != nil {
-				return nil, err
-			}
+	for fieldName, nestedStructParsedValidations := range nestedStructsParsedValidations {
+		// Add the nested struct parsed validations
+		if err := f.AddNestedStruct(
+			fieldName,
+			nestedStructParsedValidations,
+		); err != nil {
+			return nil, err
 		}
 	}
 
@@ -94,7 +91,7 @@ func (f *FlattenedParsedValidations) AddField(
 
 	// Check if the fields are nil
 	if f.fields == nil {
-		f.fields = make(map[string]interface{})
+		f.fields = make(map[string]any)
 	}
 
 	// Check if the field name is already in the flattened parsed validations
@@ -132,7 +129,7 @@ func (f *FlattenedParsedValidations) AddNestedStruct(
 
 	// Check if the fields are nil
 	if f.fields == nil {
-		f.fields = make(map[string]interface{})
+		f.fields = make(map[string]any)
 	}
 
 	// Check if the struct name is already in the flattened parsed validations
@@ -155,8 +152,8 @@ func (f *FlattenedParsedValidations) AddNestedStruct(
 //
 // Returns:
 //
-//   - map[string]interface{}: The fields
-func (f *FlattenedParsedValidations) GetFields() map[string]interface{} {
+//   - map[string]any: The fields
+func (f *FlattenedParsedValidations) GetFields() map[string]any {
 	if f == nil {
 		return nil
 	}
@@ -172,7 +169,7 @@ func NewDefaultEndParser() DefaultEndParser {
 	return DefaultEndParser{}
 }
 
-// ParseValidations parses the validations into a flattened map[string]interface{}
+// ParseValidations parses the validations into a flattened map[string]any
 //
 // Parameters:
 //
@@ -180,10 +177,12 @@ func NewDefaultEndParser() DefaultEndParser {
 //
 // Returns:
 //
-//   - interface{}: The parsed validations
-//   - error: An error if the root struct validations are nil or if there was an error generating or flattening the parsed validations
+//   - any: The parsed validations
+//
+// - error: An error if the root struct validations are nil or if there was an error generating or flattening the parsed
+// validations
 func (d DefaultEndParser) ParseValidations(structParsedValidations *govalidatormapperparser.StructParsedValidations) (
-	interface{},
+	any,
 	error,
 ) {
 	// Check if the root struct parsed validations are nil

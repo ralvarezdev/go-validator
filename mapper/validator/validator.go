@@ -54,10 +54,7 @@ func (d DefaultValidator) IsFieldInitialized(
 ) (isInitialized bool) {
 	// Check if the field is not a pointer and is initialized
 	if fieldValue.Kind() != reflect.Ptr {
-		if fieldValue.IsZero() {
-			return false
-		}
-		return true
+		return !fieldValue.IsZero()
 	}
 
 	// Check if the field is initialized

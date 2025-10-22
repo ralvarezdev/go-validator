@@ -9,6 +9,7 @@ import (
 
 	goreflect "github.com/ralvarezdev/go-reflect"
 	gostringscount "github.com/ralvarezdev/go-strings/count"
+
 	govalidatorfieldbirthdate "github.com/ralvarezdev/go-validator/field/birthdate"
 	govalidatorfieldmail "github.com/ralvarezdev/go-validator/field/mail"
 	govalidatorfieldpassword "github.com/ralvarezdev/go-validator/field/password"
@@ -124,18 +125,18 @@ func (d *DefaultService) ValidateRequiredFields(
 //
 // Returns:
 //
-//   - interface{}: the parsed validations
+//   - any: the parsed validations
 //   - error: if there was an error parsing the validations
 func (d *DefaultService) ParseValidations(
 	rootStructValidations *govalidatormappervalidation.StructValidations,
-) (interface{}, error) {
+) (any, error) {
 	if d == nil {
 		return nil, ErrNilService
 	}
 
 	// Check if there are any failed validations
 	if !rootStructValidations.HasFailed() {
-		return nil, nil
+		return nil, nil //nolint:nilnil
 	}
 
 	// Generate the parsed validations using the raw parser
@@ -361,7 +362,7 @@ func (d *DefaultService) Password(
 func (d *DefaultService) CreateValidateFn(
 	mapper *govalidatormapper.Mapper,
 	cache bool,
-	auxiliaryValidatorFns ...interface{},
+	auxiliaryValidatorFns ...any,
 ) (
 	ValidateFn, error,
 ) {
@@ -383,9 +384,9 @@ func (d *DefaultService) CreateValidateFn(
 
 	// Create the validate function
 	validateFn := func(
-		toValidate interface{},
+		toValidate any,
 	) (
-		interface{},
+		any,
 		error,
 	) {
 		// Check if the destination is a pointer
@@ -403,11 +404,11 @@ func (d *DefaultService) CreateValidateFn(
 		}
 
 		// Validate the required fields
-		if err = d.ValidateRequiredFields(
+		if valErr := d.ValidateRequiredFields(
 			rootStructValidations,
 			mapper,
-		); err != nil {
-			return nil, err
+		); valErr != nil {
+			return nil, valErr
 		}
 
 		// Call the validate function
@@ -452,12 +453,12 @@ func (d *DefaultService) CreateValidateFn(
 //
 // Returns:
 //
-//   - interface{}: the parsed validations
+//   - any: the parsed validations
 //   - error: if there was an error validating the request
 func (d *DefaultService) Validate(
 	mapper *govalidatormapper.Mapper,
-	auxiliaryValidatorFns ...interface{},
-) (interface{}, error) {
+	auxiliaryValidatorFns ...any,
+) (any, error) {
 	if d == nil {
 		return nil, ErrNilService
 	}

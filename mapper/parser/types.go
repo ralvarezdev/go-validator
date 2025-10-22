@@ -4,6 +4,7 @@ import (
 	"log/slog"
 
 	gostringsconvert "github.com/ralvarezdev/go-strings/convert"
+
 	govalidatormappervalidation "github.com/ralvarezdev/go-validator/mapper/validation"
 )
 
@@ -226,7 +227,7 @@ func (f *FieldParsedValidations) AddErrors(errors []error) {
 
 	// Append the errors to the field parsed validations
 	mappedErrors := gostringsconvert.ErrorArrayToStringArray(errors)
-	if mappedErrors == nil || len(mappedErrors) == 0 {
+	if len(mappedErrors) == 0 {
 		return
 	}
 	f.errors = append(f.errors, mappedErrors...)
@@ -236,14 +237,14 @@ func (f *FieldParsedValidations) AddErrors(errors []error) {
 //
 // Parameters:
 //
-//   - error: The error to add
-func (f *FieldParsedValidations) AddError(error string) {
+//   - err: The error to add
+func (f *FieldParsedValidations) AddError(err string) {
 	if f == nil {
 		return
 	}
 
 	// Check if the error is empty
-	if error == "" {
+	if err == "" {
 		return
 	}
 
@@ -253,7 +254,7 @@ func (f *FieldParsedValidations) AddError(error string) {
 	}
 
 	// Append the error to the field parsed validations
-	f.errors = append(f.errors, error)
+	f.errors = append(f.errors, err)
 }
 
 // GetErrors returns the errors from the field parsed validations
@@ -326,86 +327,83 @@ func (d DefaultRawParser) ParseValidations(
 
 	// Iterate over all fields and their errors
 	var fieldValidationsErrors []error
-	if fieldsValidations != nil {
-		for fieldName, fieldValidations := range fieldsValidations {
-			// Check if the field validations are nil
-			if fieldValidations == nil {
-				continue
+	for fieldName, fieldValidations := range fieldsValidations {
+		// Check if the field validations are nil
+		if fieldValidations == nil {
+			continue
+		}
+
+		// Check if the field has no errors
+		fieldValidationsErrors = fieldValidations.GetErrors()
+		if len(fieldValidationsErrors) == 0 {
+			continue
+		}
+
+		// Add the field parsed validations to the root struct parsed validations
+		fieldParsedValidations := NewFieldParsedValidations()
+		fieldParsedValidations.AddErrors(fieldValidationsErrors)
+		dest.AddField(
+			fieldName,
+			fieldParsedValidations,
+		)
+
+		// Print the field parsed validations
+		if d.logger != nil {
+			// Get the errors
+			errors := fieldValidations.GetErrors()
+			if errors == nil {
+				return nil
 			}
 
-			// Check if the field has no errors
-			fieldValidationsErrors = fieldValidations.GetErrors()
-			if fieldValidationsErrors == nil || len(fieldValidationsErrors) == 0 {
-				continue
-			}
-
-			// Add the field parsed validations to the root struct parsed validations
-			fieldParsedValidations := NewFieldParsedValidations()
-			fieldParsedValidations.AddErrors(fieldValidationsErrors)
-			dest.AddField(
-				fieldName,
-				fieldParsedValidations,
+			// Log the parsed validations
+			d.logger.Debug(
+				"Parsed validations to struct type",
+				slog.String("struct_type", structTypeName),
+				slog.String("field_name", fieldName),
+				slog.Any("errors", errors),
 			)
-
-			// Print the field parsed validations
-			if d.logger != nil {
-				// Get the errors
-				errors := fieldValidations.GetErrors()
-				if errors == nil {
-					return nil
-				}
-
-				// Log the parsed validations
-				d.logger.Debug(
-					"Parsed validations to struct type",
-					slog.String("struct_type", structTypeName),
-					slog.String("field_name", fieldName),
-					slog.Any("errors", errors),
-				)
-			}
 		}
 	}
 
 	// Iterate over all nested structs validations
-	if nestedStructsValidations != nil {
-		for fieldName, nestedStructValidations := range nestedStructsValidations {
-			// Check if the nested struct validations are nil
-			if nestedStructValidations == nil {
-				continue
-			}
+	for fieldName, nestedStructValidations := range nestedStructsValidations {
+		// Check if the nested struct validations are nil
+		if nestedStructValidations == nil {
+			continue
+		}
 
-			// Generate the nested parsed validations
-			nestedStructTypeName := nestedStructValidations.GetStructTypeName()
-			nestedStructParsedValidations := NewNestedStructParsedValidations(
-				fieldName,
-				nestedStructTypeName,
-			)
-			err := d.ParseValidations(
-				nestedStructValidations,
-				nestedStructParsedValidations,
-			)
-			if err != nil {
-				return err
-			}
+		// Generate the nested parsed validations
+		nestedStructTypeName := nestedStructValidations.GetStructTypeName()
+		nestedStructParsedValidations := NewNestedStructParsedValidations(
+			fieldName,
+			nestedStructTypeName,
+		)
+		err := d.ParseValidations(
+			nestedStructValidations,
+			nestedStructParsedValidations,
+		)
+		if err != nil {
+			return err
+		}
 
-			// Add the nested struct parsed validations to the root struct parsed validations
-			dest.AddNestedStruct(
-				fieldName,
-				nestedStructParsedValidations,
-			)
+		// Add the nested struct parsed validations to the root struct parsed validations
+		dest.AddNestedStruct(
+			fieldName,
+			nestedStructParsedValidations,
+		)
 
-			// Print the nested struct parsed validations
-			if d.logger != nil {
-				// Log the parsed validations
-				d.logger.Debug(
-					"Parsed validations to struct type: "+structTypeName,
-					slog.String("field_name", fieldName),
-					slog.String(
-						"nested_struct_type_name",
-						nestedStructTypeName,
-					),
-				)
-			}
+		// Print the nested struct parsed validations
+		if d.logger != nil {
+			// Log the parsed validations
+			d.logger.Debug(
+				"Parsed validations to struct type",
+				slog.String("struct_type", structTypeName),
+				slog.String("field_name", fieldName),
+				slog.String(
+					"nested_struct_type_name",
+					nestedStructTypeName,
+				),
+			)
 		}
 	}
 

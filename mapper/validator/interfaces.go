@@ -15,7 +15,7 @@ type (
 			mapper *govalidatormapper.Mapper,
 		) error
 		ParseValidations(rootStructValidations *govalidatormappervalidation.StructValidations) (
-			interface{},
+			any,
 			error,
 		)
 		Email(
@@ -41,14 +41,14 @@ type (
 		CreateValidateFn(
 			mapper *govalidatormapper.Mapper,
 			cache bool,
-			auxiliaryValidatorFns ...interface{},
+			auxiliaryValidatorFns ...any,
 		) (
 			ValidateFn, error,
 		)
 		Validate(
 			mapper *govalidatormapper.Mapper,
-			auxiliaryValidatorFns ...interface{},
-		) (interface{}, error)
+			auxiliaryValidatorFns ...any,
+		) (any, error)
 	}
 
 	// Validator interface

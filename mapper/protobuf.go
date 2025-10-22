@@ -48,7 +48,7 @@ func NewProtobufGenerator(logger *slog.Logger) *ProtobufGenerator {
 //
 //   - *Mapper: instance of the mapper
 //   - error: error if any
-func (p ProtobufGenerator) NewMapper(structInstance interface{}) (
+func (p ProtobufGenerator) NewMapper(structInstance any) (
 	*Mapper,
 	error,
 ) {
@@ -95,7 +95,8 @@ func (p ProtobufGenerator) NewMapper(structInstance interface{}) (
 			// Dereference the pointer
 			fieldType = fieldType.Elem()
 
-			// Check if the element type is not a struct and the tag to determine if it contains 'oneof', which means it is an optional struct field
+			// Check if the element type is not a struct and the tag to determine if it contains 'oneof', which means it
+			// is an optional struct field
 			if fieldType.Kind() != reflect.Struct || IsProtobufFieldOptional(protobufTag) {
 				// Set field as not required
 				rootMapper.SetFieldIsRequired(fieldName, false)
@@ -167,8 +168,11 @@ func (p ProtobufGenerator) NewMapper(structInstance interface{}) (
 // Returns:
 //
 //   - *Mapper: instance of the mapper
-func (p ProtobufGenerator) NewMapperWithNoError(structInstance interface{}) *Mapper {
-	mapper, _ := p.NewMapper(structInstance)
+func (p ProtobufGenerator) NewMapperWithNoError(structInstance any) *Mapper {
+	mapper, err := p.NewMapper(structInstance)
+	if err != nil {
+		panic(err)
+	}
 	return mapper
 }
 

@@ -16,7 +16,7 @@ type (
 	// EndParser is an interface to parse the root struct validations into a final format
 	EndParser interface {
 		ParseValidations(structParsedValidations *StructParsedValidations) (
-			interface{},
+			any,
 			error,
 		)
 	}

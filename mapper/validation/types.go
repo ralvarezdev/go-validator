@@ -29,7 +29,7 @@ type (
 //
 //   - *StructValidations: The StructValidations struct
 //   - error: An error if the instance is nil
-func NewStructValidations(instance interface{}) (*StructValidations, error) {
+func NewStructValidations(instance any) (*StructValidations, error) {
 	// Check if the instance is nil
 	if instance == nil {
 		return nil, ErrNilInstance
@@ -53,7 +53,7 @@ func NewStructValidations(instance interface{}) (*StructValidations, error) {
 //   - error: An error if the field name is empty or the instance is nil
 func NewNestedStructValidations(
 	fieldName string,
-	instance interface{},
+	instance any,
 ) (*StructValidations, error) {
 	// Check if the field name is empty or the instance is nil
 	if instance == nil {

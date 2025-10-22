@@ -48,7 +48,7 @@ func NewJSONGenerator(logger *slog.Logger) *JSONGenerator {
 //
 //   - *Mapper: instance of the mapper
 //   - error: error if any
-func (j JSONGenerator) NewMapper(structInstance interface{}) (
+func (j JSONGenerator) NewMapper(structInstance any) (
 	*Mapper,
 	error,
 ) {
@@ -146,7 +146,10 @@ func (j JSONGenerator) NewMapper(structInstance interface{}) (
 // Returns:
 //
 //   - *Mapper: instance of the mapper
-func (j JSONGenerator) NewMapperWithNoError(structInstance interface{}) *Mapper {
-	mapper, _ := j.NewMapper(structInstance)
+func (j JSONGenerator) NewMapperWithNoError(structInstance any) *Mapper {
+	mapper, err := j.NewMapper(structInstance)
+	if err != nil {
+		panic(err)
+	}
 	return mapper
 }

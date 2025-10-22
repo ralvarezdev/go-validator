@@ -3,8 +3,9 @@ package grpc
 import (
 	"fmt"
 
-	govalidatormapperparser "github.com/ralvarezdev/go-validator/mapper/parser"
 	"google.golang.org/genproto/googleapis/rpc/errdetails"
+
+	govalidatormapperparser "github.com/ralvarezdev/go-validator/mapper/parser"
 )
 
 type (
@@ -52,39 +53,35 @@ func NewErrorDetails(
 
 	// Add the struct parsed validations fields
 	fieldsParsedValidations := structParsedValidations.GetFields()
-	if fieldsParsedValidations != nil {
-		for fieldName, fieldParsedValidations := range fieldsParsedValidations {
-			// Prefix the field name with the parent field name if it exists
-			if parentFieldName != nil {
-				fieldName = fmt.Sprintf("%s.%s", *parentFieldName, fieldName)
-			}
+	for fieldName, fieldParsedValidations := range fieldsParsedValidations {
+		// Prefix the field name with the parent field name if it exists
+		if parentFieldName != nil {
+			fieldName = fmt.Sprintf("%s.%s", *parentFieldName, fieldName)
+		}
 
-			// Add the field parsed validations
-			if err := e.AddField(
-				fieldName,
-				fieldParsedValidations,
-			); err != nil {
-				return nil, err
-			}
+		// Add the field parsed validations
+		if err := e.AddField(
+			fieldName,
+			fieldParsedValidations,
+		); err != nil {
+			return nil, err
 		}
 	}
 
 	// Add the struct parsed validations nested structs
 	nestedStructsParsedValidations := structParsedValidations.GetNestedStructs()
-	if nestedStructsParsedValidations != nil {
-		for fieldName, nestedStructParsedValidations := range nestedStructsParsedValidations {
-			// Prefix the field name with the parent field name if it exists
-			if parentFieldName != nil {
-				fieldName = fmt.Sprintf("%s.%s", *parentFieldName, fieldName)
-			}
+	for fieldName, nestedStructParsedValidations := range nestedStructsParsedValidations {
+		// Prefix the field name with the parent field name if it exists
+		if parentFieldName != nil {
+			fieldName = fmt.Sprintf("%s.%s", *parentFieldName, fieldName)
+		}
 
-			// Add the nested struct parsed validations
-			if err := e.AddNestedStruct(
-				fieldName,
-				nestedStructParsedValidations,
-			); err != nil {
-				return nil, err
-			}
+		// Add the nested struct parsed validations
+		if err := e.AddNestedStruct(
+			fieldName,
+			nestedStructParsedValidations,
+		); err != nil {
+			return nil, err
 		}
 	}
 
@@ -202,10 +199,10 @@ func NewDefaultEndParser() DefaultEndParser {
 //
 // Returns:
 //
-//   - interface{}: The parsed validations
+//   - any: The parsed validations
 //   - error: An error if the root struct validations are nil or if there was an error generating the BadRequest
 func (d DefaultEndParser) ParseValidations(structParsedValidations *govalidatormapperparser.StructParsedValidations) (
-	interface{},
+	any,
 	error,
 ) {
 	// Check if the root struct parsed validations are nil

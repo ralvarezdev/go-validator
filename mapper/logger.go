@@ -1,7 +1,6 @@
 package mapper
 
 import (
-	"fmt"
 	"log/slog"
 	"reflect"
 )
@@ -29,7 +28,7 @@ func DetectedField(
 			"Detected field on struct type",
 			slog.String("struct_type", structTypeName),
 			slog.String("field_name", fieldName),
-			slog.Any("field_type", fmt.Sprintf("%v", fieldType)),
+			slog.Any("field_type", fieldType.String()),
 			slog.String("field_tag", tag),
 			slog.Bool("field_is_required", required),
 		)

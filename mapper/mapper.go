@@ -8,7 +8,7 @@ type (
 	// Mapper is a map of fields to validate from a struct
 	Mapper struct {
 		// structInstance is the instance of the struct
-		structInstance interface{}
+		structInstance any
 
 		// fields key is the field name and value is the tag name
 		fields map[string]string
@@ -30,7 +30,7 @@ type (
 // Returns:
 //
 //   - *Mapper: instance of the mapper
-func NewMapper(structInstance interface{}) *Mapper {
+func NewMapper(structInstance any) *Mapper {
 	return &Mapper{structInstance: structInstance}
 }
 
@@ -38,8 +38,8 @@ func NewMapper(structInstance interface{}) *Mapper {
 //
 // Returns:
 //
-//   - interface{}: instance of the struct
-func (m *Mapper) GetStructInstance() interface{} {
+//   - any: instance of the struct
+func (m *Mapper) GetStructInstance() any {
 	if m == nil {
 		return nil
 	}
@@ -122,7 +122,8 @@ func (m *Mapper) AddFieldTagName(fieldName, fieldTagName string) {
 //
 // Returns:
 //
-//   - map[string]bool: map of required fields where key is the field name and value is a boolean to determine if the field is required
+// - map[string]bool: map of required fields where key is the field name and value is a boolean to determine if the
+// field is required
 func (m *Mapper) GetRequiredFields() map[string]bool {
 	if m == nil {
 		return nil
@@ -140,7 +141,7 @@ func (m *Mapper) GetRequiredFields() map[string]bool {
 //
 //   - bool: true if the field is required, false otherwise
 //   - bool: true if the field exists, false otherwise
-func (m *Mapper) IsFieldRequired(fieldName string) (bool, bool) {
+func (m *Mapper) IsFieldRequired(fieldName string) (isFieldRequired, fileExists bool) {
 	if m == nil {
 		return false, false
 	}
@@ -191,7 +192,8 @@ func (m *Mapper) HasFieldsValidations() bool {
 //
 // Returns:
 //
-//   - map[string]*Mapper: map of nested mappers where key is the field name of the nested struct and value is the nested mapper
+// - map[string]*Mapper: map of nested mappers where key is the field name of the nested struct and value is the nested
+// mapper
 func (m *Mapper) GetNestedMappers() map[string]*Mapper {
 	if m == nil {
 		return nil
