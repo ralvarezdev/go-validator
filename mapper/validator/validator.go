@@ -103,7 +103,21 @@ func (d DefaultValidator) ValidateRequiredFields(
 		structField := reflectedType.Field(i)
 		fieldType := structField.Type
 		fieldName := structField.Name
-
+		
+		// Check if the field is exported
+	 	if structField.PkgPath != "" {
+			if d.logger != nil {
+				d.logger.Debug(
+					"Skipping private (unexported) field on struct type",
+					slog.String("struct_type", structTypeName),
+					slog.String("field_name", fieldName),
+					slog.Any("field_type", fieldType),
+					slog.Any("field_value", fieldValue),
+				)
+			}
+			continue
+		}
+		
 		// Get the field tag name
 		fieldTagName, ok := mapper.GetFieldTagName(fieldName)
 		if !ok {
