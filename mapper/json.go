@@ -59,7 +59,10 @@ func (j JSONGenerator) NewMapper(structInstance any) (
 	structTypeName := reflectedType.Name()
 
 	// Initialize the root map of fields and the map of nested mappers
-	rootMapper := NewMapper(structInstance)
+	rootMapper, err := NewMapper(structInstance)
+	if err != nil {
+		return nil, err
+	}
 
 	// Reflection of the type of data
 	var jsonTag string

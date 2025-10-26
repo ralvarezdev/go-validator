@@ -30,8 +30,32 @@ type (
 // Returns:
 //
 //   - *Mapper: instance of the mapper
-func NewMapper(structInstance any) *Mapper {
-	return &Mapper{structInstance: structInstance}
+//   - error: error if the struct instance is nil
+func NewMapper(structInstance any) (*Mapper, error) {
+	// Check if the struct instance is nil
+	if structInstance == nil {
+		return nil, ErrNilStructInstance
+	}
+
+	// Get the type of the struct instance
+	structInstanceType := reflect.TypeOf(structInstance)
+	structInstanceValue := reflect.ValueOf(structInstance)
+
+	// Dereference pointer if necessary
+	if structInstanceType.Kind() == reflect.Ptr {
+		structInstanceType = structInstanceType.Elem()
+		structInstanceValue = structInstanceValue.Elem()
+	}
+
+	// Ensure it's a struct
+	if structInstanceType.Kind() != reflect.Struct {
+		return nil, ErrInvalidStructInstance
+	}
+
+	// Use the dereferenced value (as interface{})
+	dereferencedStructInstance := structInstanceValue.Interface()
+
+	return &Mapper{structInstance: dereferencedStructInstance}, nil
 }
 
 // GetStructInstance returns the instance of the struct

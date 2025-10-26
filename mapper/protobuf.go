@@ -51,7 +51,7 @@ func NewProtobufGenerator(logger *slog.Logger) *ProtobufGenerator {
 func (p ProtobufGenerator) NewMapper(structInstance any) (
 	*Mapper,
 	error,
-) {
+) {	
 	// Reflection of data
 	reflectedType := goreflect.GetDereferencedType(structInstance)
 
@@ -59,7 +59,10 @@ func (p ProtobufGenerator) NewMapper(structInstance any) (
 	structTypeName := goreflect.GetTypeName(reflectedType)
 
 	// Initialize the root map of fields and the map of nested mappers
-	rootMapper := NewMapper(structInstance)
+	rootMapper, err := NewMapper(structInstance)
+	if err != nil {
+		return nil, err
+	}
 
 	// Reflection of the type of data
 	for i := 0; i < reflectedType.NumField(); i++ {
