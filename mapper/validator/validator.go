@@ -118,28 +118,12 @@ func (d DefaultValidator) ValidateRequiredFields(
 			continue
 		}
 		
-		// Get the field tag name
-		fieldTagName, ok := mapper.GetFieldTagName(fieldName)
-		if !ok {
-			// Print field
-			if d.logger != nil {
-				d.logger.Debug(
-					"Field tag name not found on struct type",
-					slog.String("struct_type", structTypeName),
-					slog.String("field_name", fieldName),
-					slog.String("field_tag_name", fieldTagName),
-					slog.Any("field_value", fieldValue),
-				)
-			}
-			return fmt.Errorf(ErrFieldTagNameNotFound, fieldName)
-		}
-
 		// Check if the field is required
 		isRequired, ok := mapper.IsFieldRequired(fieldName)
 		if !ok {
 			return fmt.Errorf(ErrFieldIsRequiredNotFound, fieldName)
 		}
-
+		
 		// Check if the field is initialized
 		isInitialized := d.IsFieldInitialized(fieldValue)
 
@@ -170,8 +154,24 @@ func (d DefaultValidator) ValidateRequiredFields(
 		if !isRequired {
 			continue
 		}
+		
+		// Get the field tag name
+		fieldTagName, ok := mapper.GetFieldTagName(fieldName)
+		if !ok {
+			// Print field
+			if d.logger != nil {
+				d.logger.Debug(
+					"Field tag name not found on struct type",
+					slog.String("struct_type", structTypeName),
+					slog.String("field_name", fieldName),
+					slog.String("field_tag_name", fieldTagName),
+					slog.Any("field_value", fieldValue),
+				)
+			}
+			return fmt.Errorf(ErrFieldTagNameNotFound, fieldName)
+		}
 
-		// Check if the field is a pointer
+		// Check if the is initialized
 		if !isInitialized {
 			rootStructValidations.AddFieldValidationError(
 				fieldTagName,
@@ -180,11 +180,12 @@ func (d DefaultValidator) ValidateRequiredFields(
 			continue
 		}
 
-		// Check if the field is a scalar required or optional field
+		// Check if the field is a pointer
 		if fieldValue.Kind() != reflect.Ptr {
 			if fieldType.Kind() != reflect.Struct {
 				continue
 			}
+		// Check if the field is a scalar required or optional field
 		} else if fieldValue.Elem().Kind() != reflect.Struct {
 			continue
 		}
