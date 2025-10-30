@@ -1,7 +1,6 @@
 package mapper
 
 import (
-	"fmt"
 	"log/slog"
 	"reflect"
 	"strings"
@@ -65,8 +64,6 @@ func (j JSONGenerator) NewMapper(structInstance any) (
 	}
 
 	// Reflection of the type of data
-	var jsonTag string
-	var jsonName string
 	for i := 0; i < reflectedType.NumField(); i++ {
 		// Get the field type through reflection
 		structField := reflectedType.Field(i)
@@ -75,14 +72,13 @@ func (j JSONGenerator) NewMapper(structInstance any) (
 		fieldName := structField.Name
 
 		// Get the JSON tag of the field
-		jsonTag = fieldTag.Get(JSONTag)
+		jsonTag := fieldTag.Get(JSONTag)
 
-		// Get the field name from the JSON tag
-		tagParts := strings.Split(jsonTag, ",")
-		if len(tagParts) == 0 {
-			return nil, fmt.Errorf(ErrEmptyJSONTag, fieldName)
+		// Get the JSON name from the tag
+		jsonName, err := GetJSONTagName(jsonTag, fieldName)
+		if err != nil {
+			return nil, err
 		}
-		jsonName = tagParts[0]
 
 		// Add field tag name to the map and set the field as parsed
 		rootMapper.AddFieldTagName(fieldName, jsonName)

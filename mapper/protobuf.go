@@ -1,10 +1,8 @@
 package mapper
 
 import (
-	"fmt"
 	"log/slog"
 	"reflect"
-	"strings"
 
 	goreflect "github.com/ralvarezdev/go-reflect"
 )
@@ -71,23 +69,21 @@ func (p ProtobufGenerator) NewMapper(structInstance any) (
 		fieldType := structField.Type
 		fieldName := structField.Name
 
-		// Check if the field is a protoc generated field
-		if fieldName == State || fieldName == SizeCache || fieldName == UnknownFields {
+		// Omit protobuf internal fields
+		if IsProtobufGeneratedField(fieldName) {
 			continue
 		}
 
 		// Get the Protobuf tag of the field
-		protobufTag := structField.Tag.Get(ProtobufTag)
-		if protobufTag == "" {
-			return nil, fmt.Errorf(ErrProtobufTagNotFound, fieldName)
+		protobufTag, err := GetProtobufTag(structField, fieldName)
+		if err != nil {
+			return nil, err
 		}
 
 		// Get the field name from the Protobuf tag
-		protobufName := GetProtobufTagName(protobufTag)
-
-		// Check if the field name is empty
-		if protobufName == "" {
-			return nil, fmt.Errorf(ErrProtobufTagNameNotFound, fieldName)
+		protobufName, err := GetProtobufTagName(protobufTag, fieldName)
+		if err != nil {
+			return nil, err
 		}
 
 		// Add the field to the fields map
@@ -177,38 +173,4 @@ func (p ProtobufGenerator) NewMapperWithNoError(structInstance any) *Mapper {
 		panic(err)
 	}
 	return mapper
-}
-
-// GetProtobufTagName returns the Protobuf tag name for a given struct field name
-//
-// Parameters:
-//
-//   - protobufTag: The Protobuf tag of the struct field
-//
-// Returns:
-//
-//   - string: Protobuf tag name
-func GetProtobufTagName(protobufTag string) string {
-	for _, part := range strings.Split(protobufTag, ",") {
-		if strings.HasPrefix(part, ProtobufNamePrefix) {
-			return strings.TrimPrefix(part, ProtobufNamePrefix)
-		}
-	}
-	return ""
-}
-
-// IsProtobufFieldOptional returns true if the Protobuf field is optional
-//
-// Parameters:
-//
-//   - protobufTag: The Protobuf tag of the struct field
-//
-// Returns:
-//
-//   - bool: true if the Protobuf field is optional
-func IsProtobufFieldOptional(protobufTag string) bool {
-	return strings.Contains(
-		protobufTag,
-		ProtobufOneOf,
-	)
 }
