@@ -73,6 +73,11 @@ func (p ProtobufGenerator) NewMapper(structInstance any) (
 		if IsProtobufGeneratedField(fieldName) {
 			continue
 		}
+		
+		// Omit protobuf oneof field (optional fields)
+		if IsProtobufOneOfField(structField) {
+			continue
+		}
 
 		// Get the Protobuf tag of the field
 		protobufTag, err := GetProtobufTag(structField, fieldName)
@@ -122,23 +127,6 @@ func (p ProtobufGenerator) NewMapper(structInstance any) (
 
 			// Add the nested fields to the map
 			rootMapper.AddFieldNestedMapper(fieldName, fieldNestedMapper)
-		}
-
-		// Check if the field is an interface (special case for oneof fields)
-		if fieldType.Kind() == reflect.Interface {
-			// Set field as not required
-			rootMapper.SetFieldIsRequired(fieldName, false)
-
-			// Print field
-			DetectedField(
-				structTypeName,
-				fieldName,
-				fieldType,
-				protobufTag,
-				false,
-				p.logger,
-			)
-			continue
 		}
 
 		// Set field as required

@@ -7,6 +7,7 @@ const (
 	UnknownFields      = "unknownFields"
 	ProtobufTag        = "protobuf"
 	ProtobufOneOf      = "oneof"
+	ProtobufOneOfTag   = "protobuf_oneof"
 	ProtobufNamePrefix = "name="
 	JSONTag            = "json"
 	JSONOmitempty      = "omitempty"

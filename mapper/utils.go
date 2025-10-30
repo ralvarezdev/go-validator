@@ -51,12 +51,24 @@ func GetJSONTagName(jsonTag, fieldName string) (string, error) {
 // - string: Protobuf tag
 // - error: error if the Protobuf tag is not found
 func GetProtobufTag(structField reflect.StructField, fieldName string) (string, error) {
-	// Get the Protobuf tag of the field
 	protobufTag := structField.Tag.Get(ProtobufTag)
 	if protobufTag == "" {
 		return "", fmt.Errorf(ErrProtobufTagNotFound, fieldName)
 	}
 	return protobufTag, nil
+}
+
+// IsProtobufOneOfField checks if the struct field is a Protobuf oneof field
+// 
+// Parameters:
+// 
+// - structField: The struct field
+// 
+// Returns:
+// 
+// - bool: true if the struct field is a Protobuf oneof field
+func IsProtobufOneOfField(structField reflect.StructField) bool {
+	return structField.Tag.Get(ProtobufOneOfTag) != ""
 }
 
 // GetProtobufTagName returns the Protobuf tag name for a given struct field name
