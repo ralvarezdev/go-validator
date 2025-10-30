@@ -205,6 +205,7 @@ func (d *DefaultService) Email(
 			emailField,
 			govalidatorfieldmail.ErrInvalidMailAddress,
 		)
+		return
 	}
 
 	// Check if the mail address is valid
