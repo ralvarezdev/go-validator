@@ -71,6 +71,13 @@ func (j JSONGenerator) NewMapper(structInstance any) (
 		fieldTag := structField.Tag
 		fieldName := structField.Name
 
+		// Check if the field is unexported
+		if !goreflect.IsStructFieldExported(structField) {
+			// Set field as not required
+			rootMapper.SetFieldIsRequired(fieldName, false)
+			continue
+		}
+			
 		// Get the JSON tag of the field
 		jsonTag := fieldTag.Get(JSONTag)
 

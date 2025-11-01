@@ -8,6 +8,8 @@ github.com/ralvarezdev/go-reflect v0.2.11 h1:WqwL1MHVH4VWTj6RahZc+v47kjJOwya0+A+
 github.com/ralvarezdev/go-reflect v0.2.11/go.mod h1:HFctB1EEZdN5+T9luOalTmdRfIQ9SwQd4LtxXDGicbE=
 github.com/ralvarezdev/go-reflect v0.2.12 h1:Bttzr/oxXLaaKm9fPIfDsZuFfMQsPw/VJijCml2FD60=
 github.com/ralvarezdev/go-reflect v0.2.12/go.mod h1:CsZqMmJCXYow9l2YQIdvIe/q7aeRtlA3gq0r9dmLEN0=
+github.com/ralvarezdev/go-reflect v0.2.13 h1:ExWU/O6dz4OPzdHgTrJas7uIOF5ELSLP/KjwlfncoeE=
+github.com/ralvarezdev/go-reflect v0.2.13/go.mod h1:CsZqMmJCXYow9l2YQIdvIe/q7aeRtlA3gq0r9dmLEN0=
 github.com/ralvarezdev/go-strings v0.1.15 h1:K+YnBiokOPNRvtVo7f2u0SyCjAILDVAqkRd2rgnBj4U=
 github.com/ralvarezdev/go-strings v0.1.15/go.mod h1:8sFOqmPJpqzS7bTjf91EzUCITnwpmkfifwY80GxV5r8=
 github.com/ralvarezdev/go-strings v0.1.16 h1:0yc7yamYEWVrFTK3C95IjSE5IqCs3H1alIIVEmzIolY=

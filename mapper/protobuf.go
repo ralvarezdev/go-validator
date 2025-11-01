@@ -69,13 +69,10 @@ func (p ProtobufGenerator) NewMapper(structInstance any) (
 		fieldType := structField.Type
 		fieldName := structField.Name
 
-		// Omit protobuf internal fields
-		if IsProtobufGeneratedField(fieldName) {
-			continue
-		}
-		
-		// Omit protobuf oneof field (optional fields)
-		if IsProtobufOneOfField(structField) {
+		// Omit protobuf internal fields, protobuf oneof fields or just unexported fields
+		if IsProtobufGeneratedField(fieldName) || IsProtobufOneOfField(structField) || !goreflect.IsStructFieldExported(structField) {
+			// Set field as not required
+			rootMapper.SetFieldIsRequired(fieldName, false)
 			continue
 		}
 
