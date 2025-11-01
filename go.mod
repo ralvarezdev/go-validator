@@ -4,7 +4,7 @@ go 1.24.0
 
 require (
 	github.com/ralvarezdev/go-reflect v0.2.13
-	github.com/ralvarezdev/go-strings v0.1.17
+	github.com/ralvarezdev/go-strings v0.2.0
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20251020155222-88f65dc88635
 )
 

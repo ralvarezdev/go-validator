@@ -5,6 +5,7 @@ import (
 	"reflect"
 
 	goreflect "github.com/ralvarezdev/go-reflect"
+	gostringsprotobuf "github.com/ralvarezdev/go-strings/protobuf"
 )
 
 type (
@@ -49,7 +50,12 @@ func NewProtobufGenerator(logger *slog.Logger) *ProtobufGenerator {
 func (p ProtobufGenerator) NewMapper(structInstance any) (
 	*Mapper,
 	error,
-) {	
+) {
+	// Check if the struct instance is nil
+	if structInstance == nil {
+		return nil, ErrNilStructInstance
+	}
+	
 	// Reflection of data
 	reflectedType := goreflect.GetDereferencedType(structInstance)
 
@@ -70,20 +76,20 @@ func (p ProtobufGenerator) NewMapper(structInstance any) (
 		fieldName := structField.Name
 
 		// Omit protobuf internal fields, protobuf oneof fields or just unexported fields
-		if IsProtobufGeneratedField(fieldName) || IsProtobufOneOfField(structField) || !goreflect.IsStructFieldExported(structField) {
+		if gostringsprotobuf.IsProtobufGeneratedField(fieldName) || gostringsprotobuf.IsProtobufOneOfField(structField) || !goreflect.IsStructFieldExported(structField) {
 			// Set field as not required
 			rootMapper.SetFieldIsRequired(fieldName, false)
 			continue
 		}
 
 		// Get the Protobuf tag of the field
-		protobufTag, err := GetProtobufTag(structField, fieldName)
+		protobufTag, err := gostringsprotobuf.GetProtobufTag(structField, fieldName)
 		if err != nil {
 			return nil, err
 		}
 
 		// Get the field name from the Protobuf tag
-		protobufName, err := GetProtobufTagName(protobufTag, fieldName)
+		protobufName, err := gostringsprotobuf.GetProtobufTagName(protobufTag, fieldName)
 		if err != nil {
 			return nil, err
 		}
@@ -98,7 +104,7 @@ func (p ProtobufGenerator) NewMapper(structInstance any) (
 
 			// Check if the element type is not a struct and the tag to determine if it contains 'oneof', which means it
 			// is an optional struct field
-			if fieldType.Kind() != reflect.Struct || IsProtobufFieldOptional(protobufTag) {
+			if fieldType.Kind() != reflect.Struct || gostringsprotobuf.IsProtobufFieldOptional(protobufTag) {
 				// Set field as not required
 				rootMapper.SetFieldIsRequired(fieldName, false)
 

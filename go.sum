@@ -16,6 +16,8 @@ github.com/ralvarezdev/go-strings v0.1.16 h1:0yc7yamYEWVrFTK3C95IjSE5IqCs3H1alII
 github.com/ralvarezdev/go-strings v0.1.16/go.mod h1:8sFOqmPJpqzS7bTjf91EzUCITnwpmkfifwY80GxV5r8=
 github.com/ralvarezdev/go-strings v0.1.17 h1:HFFqe5fVqsYdaOsj+yoVtgIgkNXubDHSz5ubN8V6iW8=
 github.com/ralvarezdev/go-strings v0.1.17/go.mod h1:8sFOqmPJpqzS7bTjf91EzUCITnwpmkfifwY80GxV5r8=
+github.com/ralvarezdev/go-strings v0.2.0 h1:JJUbGRpsnmuoEaFVv+rTT3P4BTsMqGOzlLkQRdfbt6c=
+github.com/ralvarezdev/go-strings v0.2.0/go.mod h1:8sFOqmPJpqzS7bTjf91EzUCITnwpmkfifwY80GxV5r8=
 google.golang.org/genproto/googleapis/rpc v0.0.0-20251007200510-49b9836ed3ff h1:A90eA31Wq6HOMIQlLfzFwzqGKBTuaVztYu/g8sn+8Zc=
 google.golang.org/genproto/googleapis/rpc v0.0.0-20251007200510-49b9836ed3ff/go.mod h1:7i2o+ce6H/6BluujYR+kqX3GKH+dChPTQU19wjRPiGk=
 google.golang.org/genproto/googleapis/rpc v0.0.0-20251020155222-88f65dc88635 h1:3uycTxukehWrxH4HtPRtn1PDABTU331ViDjyqrUbaog=

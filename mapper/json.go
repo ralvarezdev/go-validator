@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	goreflect "github.com/ralvarezdev/go-reflect"
+	gostringsjson "github.com/ralvarezdev/go-strings/json"
 )
 
 type (
@@ -51,6 +52,11 @@ func (j JSONGenerator) NewMapper(structInstance any) (
 	*Mapper,
 	error,
 ) {
+	// Check if the struct instance is nil
+	if structInstance == nil {
+		return nil, ErrNilStructInstance
+	}
+	
 	// Reflection of data
 	reflectedType := goreflect.GetDereferencedType(structInstance)
 
@@ -68,7 +74,6 @@ func (j JSONGenerator) NewMapper(structInstance any) (
 		// Get the field type through reflection
 		structField := reflectedType.Field(i)
 		fieldType := structField.Type
-		fieldTag := structField.Tag
 		fieldName := structField.Name
 
 		// Check if the field is unexported
@@ -79,10 +84,13 @@ func (j JSONGenerator) NewMapper(structInstance any) (
 		}
 			
 		// Get the JSON tag of the field
-		jsonTag := fieldTag.Get(JSONTag)
+		jsonTag, err := gostringsjson.GetJSONTag(structField, fieldName)
+		if err != nil {
+			return nil, err
+		}
 
 		// Get the JSON name from the tag
-		jsonName, err := GetJSONTagName(jsonTag, fieldName)
+		jsonName, err := gostringsjson.GetJSONTagName(jsonTag, fieldName)
 		if err != nil {
 			return nil, err
 		}
@@ -91,7 +99,7 @@ func (j JSONGenerator) NewMapper(structInstance any) (
 		rootMapper.AddFieldTagName(fieldName, jsonName)
 
 		// Check if the JSON tag is unassigned or if it contains 'omitempty', which means it is an optional field
-		if jsonTag == "-" || strings.Contains(jsonTag, JSONOmitempty) {
+		if jsonTag == "-" || strings.Contains(jsonTag, gostringsjson.JSONOmitempty) {
 			// Set field name as not required
 			rootMapper.SetFieldIsRequired(fieldName, false)
 
