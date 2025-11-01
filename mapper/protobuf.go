@@ -76,7 +76,7 @@ func (p ProtobufGenerator) NewMapper(structInstance any) (
 		fieldName := structField.Name
 
 		// Omit protobuf internal fields or just unexported fields
-		if gostringsprotobuf.IsProtobufGeneratedField(fieldName) || !goreflect.IsStructFieldExported(structField) {
+		if gostringsprotobuf.IsProtobufGeneratedField(fieldName) || !goreflect.IsStructFieldExported(&structField) {
 			// Set field as not required
 			rootMapper.SetFieldIsRequired(fieldName, false)
 			continue
