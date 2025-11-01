@@ -2,11 +2,16 @@ package mapper
 
 import (
 	"reflect"
+	
+	goreflect "github.com/ralvarezdev/go-reflect"
 )
 
 type (
 	// Mapper is a map of fields to validate from a struct
 	Mapper struct {
+		// uniqueTypeReference is the unique type reference of the struct
+		uniqueTypeReference string
+		
 		// structInstance is the instance of the struct
 		structInstance any
 
@@ -38,24 +43,36 @@ func NewMapper(structInstance any) (*Mapper, error) {
 	}
 
 	// Get the type of the struct instance
-	structInstanceType := reflect.TypeOf(structInstance)
-	structInstanceValue := reflect.ValueOf(structInstance)
-
-	// Dereference pointer if necessary
-	if structInstanceType.Kind() == reflect.Ptr {
-		structInstanceType = structInstanceType.Elem()
-		structInstanceValue = structInstanceValue.Elem()
-	}
+	structInstanceType := goreflect.GetDereferencedType(structInstance)
+	structInstanceValue := goreflect.GetDereferencedValue(structInstance)
 
 	// Ensure it's a struct
 	if structInstanceType.Kind() != reflect.Struct {
 		return nil, ErrInvalidStructInstance
 	}
+	
+	// Get the value of the struct instance
+	structInstanceValueInterface := structInstanceValue.Interface()
+	
+	// Get the unique type identifier for the struct
+	uniqueTypeReference := goreflect.UniqueTypeReference(structInstanceValueInterface)
 
-	// Use the dereferenced value (as interface{})
-	dereferencedStructInstance := structInstanceValue.Interface()
+	return &Mapper{
+		structInstance: structInstanceValueInterface,
+	 	uniqueTypeReference: uniqueTypeReference,
+	}, nil
+}
 
-	return &Mapper{structInstance: dereferencedStructInstance}, nil
+// GetUniqueTypeReference returns the unique type reference of the struct
+// 
+// Returns:
+// 
+//  - string: unique type reference of the struct
+func (m *Mapper) GetUniqueTypeReference() string {
+	if m == nil {
+		return ""
+	}
+	return m.uniqueTypeReference
 }
 
 // GetStructInstance returns the instance of the struct

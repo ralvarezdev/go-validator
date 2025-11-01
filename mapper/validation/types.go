@@ -7,6 +7,7 @@ import (
 type (
 	// StructValidations is a struct that holds the struct validations for the generated validations of a struct
 	StructValidations struct {
+		uniqueTypeReference     *string
 		fieldName                *string
 		reflection               *goreflect.Reflection
 		fieldsValidations        map[string]*FieldValidations
@@ -34,9 +35,20 @@ func NewStructValidations(instance any) (*StructValidations, error) {
 	if instance == nil {
 		return nil, ErrNilInstance
 	}
+	
+	// Get the reflection of the instance
+	instanceReflection := goreflect.NewDereferencedReflection(instance)
+	instanceValue := instanceReflection.GetReflectedValue()
+	
+	// Get the interface of the instance
+	instanceValueInterface := instanceValue.Interface()
+	
+	// Get the unique type identifier for the instance
+	uniqueTypeReference := goreflect.UniqueTypeReference(instanceValueInterface)
 
 	return &StructValidations{
-		reflection: goreflect.NewDereferencedReflection(instance),
+		uniqueTypeReference: &uniqueTypeReference,
+		reflection: instanceReflection,
 	}, nil
 }
 
@@ -62,7 +74,7 @@ func NewNestedStructValidations(
 	if fieldName == "" {
 		return NewStructValidations(instance)
 	}
-
+	
 	return &StructValidations{
 		fieldName:  &fieldName,
 		reflection: goreflect.NewDereferencedReflection(instance),
@@ -91,6 +103,18 @@ func (s *StructValidations) GetStructTypeName() string {
 		return ""
 	}
 	return s.reflection.GetReflectedTypeName()
+}
+
+// GetUniqueTypeReference returns the unique type reference of the struct
+// 
+// Returns:
+// 
+//  - *string: The unique type reference of the struct
+func (s *StructValidations) GetUniqueTypeReference() *string {
+	if s == nil {
+		return nil
+	}
+	return s.uniqueTypeReference
 }
 
 // HasFailed returns true if there are failed validations

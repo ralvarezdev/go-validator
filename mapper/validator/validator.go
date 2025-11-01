@@ -86,6 +86,20 @@ func (d DefaultValidator) ValidateRequiredFields(
 	if mapper == nil {
 		return ErrNilMapper
 	}
+	
+	// Compare the unique type references
+	rootStructValidationsTypeReference := rootStructValidations.GetUniqueTypeReference()
+	mapperTypeReference := mapper.GetUniqueTypeReference()
+	if rootStructValidationsTypeReference == nil {
+		return ErrStructValidationsIsNotRootLevel
+	}
+	if *rootStructValidationsTypeReference != mapperTypeReference {
+		return fmt.Errorf(
+			ErrStructValidationsAndMapperTypeMismatch,
+			mapperTypeReference,
+			*rootStructValidationsTypeReference,
+		)
+	}
 
 	// Check if the struct has fields validations
 	if !mapper.HasFieldsValidations() {
