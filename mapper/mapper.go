@@ -2,7 +2,7 @@ package mapper
 
 import (
 	"reflect"
-	
+
 	goreflect "github.com/ralvarezdev/go-reflect"
 )
 
@@ -11,7 +11,7 @@ type (
 	Mapper struct {
 		// uniqueTypeReference is the unique type reference of the struct
 		uniqueTypeReference string
-		
+
 		// structInstance is the instance of the struct
 		structInstance any
 
@@ -50,24 +50,24 @@ func NewMapper(structInstance any) (*Mapper, error) {
 	if structInstanceType.Kind() != reflect.Struct {
 		return nil, ErrInvalidStructInstance
 	}
-	
+
 	// Get the value of the struct instance
 	structInstanceValueInterface := structInstanceValue.Interface()
-	
+
 	// Get the unique type identifier for the struct
 	uniqueTypeReference := goreflect.UniqueTypeReference(structInstanceValueInterface)
 
 	return &Mapper{
-		structInstance: structInstanceValueInterface,
-	 	uniqueTypeReference: uniqueTypeReference,
+		structInstance:      structInstanceValueInterface,
+		uniqueTypeReference: uniqueTypeReference,
 	}, nil
 }
 
 // GetUniqueTypeReference returns the unique type reference of the struct
-// 
+//
 // Returns:
-// 
-//  - string: unique type reference of the struct
+//
+//   - string: unique type reference of the struct
 func (m *Mapper) GetUniqueTypeReference() string {
 	if m == nil {
 		return ""

@@ -55,7 +55,7 @@ func (p ProtobufGenerator) NewMapper(structInstance any) (
 	if structInstance == nil {
 		return nil, ErrNilStructInstance
 	}
-	
+
 	// Reflection of data
 	reflectedType := goreflect.GetDereferencedType(structInstance)
 
@@ -75,23 +75,34 @@ func (p ProtobufGenerator) NewMapper(structInstance any) (
 		fieldType := structField.Type
 		fieldName := structField.Name
 
-		// Omit protobuf internal fields, protobuf oneof fields or just unexported fields
-		if gostringsprotobuf.IsProtobufGeneratedField(fieldName) || gostringsprotobuf.IsProtobufOneOfField(structField) || !goreflect.IsStructFieldExported(structField) {
+		// Omit protobuf internal fields or just unexported fields
+		if gostringsprotobuf.IsProtobufGeneratedField(fieldName) || !goreflect.IsStructFieldExported(structField) {
+			// Set field as not required
+			rootMapper.SetFieldIsRequired(fieldName, false)
+			continue
+		}
+
+		// Check if the field is a Protobuf oneof field
+		ok, oneOfErr := gostringsprotobuf.IsProtobufOneOfField(&structField)
+		if oneOfErr != nil {
+			return nil, oneOfErr
+		}
+		if ok {
 			// Set field as not required
 			rootMapper.SetFieldIsRequired(fieldName, false)
 			continue
 		}
 
 		// Get the Protobuf tag of the field
-		protobufTag, err := gostringsprotobuf.GetProtobufTag(structField, fieldName)
-		if err != nil {
-			return nil, err
+		protobufTag, protobufTagErr := gostringsprotobuf.GetProtobufTag(&structField, fieldName)
+		if protobufTagErr != nil {
+			return nil, protobufTagErr
 		}
 
 		// Get the field name from the Protobuf tag
-		protobufName, err := gostringsprotobuf.GetProtobufTagName(protobufTag, fieldName)
-		if err != nil {
-			return nil, err
+		protobufName, protobufTagNameErr := gostringsprotobuf.GetProtobufTagName(protobufTag, fieldName)
+		if protobufTagNameErr != nil {
+			return nil, protobufTagNameErr
 		}
 
 		// Add the field to the fields map
@@ -121,11 +132,11 @@ func (p ProtobufGenerator) NewMapper(structInstance any) (
 			}
 
 			// Create a new Mapper for the nested struct field
-			fieldNestedMapper, err := p.NewMapper(
+			fieldNestedMapper, mapperErr := p.NewMapper(
 				reflect.New(fieldType).Interface(),
 			)
-			if err != nil {
-				return nil, err
+			if mapperErr != nil {
+				return nil, mapperErr
 			}
 
 			// Add the nested fields to the map

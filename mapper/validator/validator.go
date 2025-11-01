@@ -86,7 +86,7 @@ func (d DefaultValidator) ValidateRequiredFields(
 	if mapper == nil {
 		return ErrNilMapper
 	}
-	
+
 	// Compare the unique type references
 	rootStructValidationsTypeReference := rootStructValidations.GetUniqueTypeReference()
 	mapperTypeReference := mapper.GetUniqueTypeReference()
@@ -115,17 +115,17 @@ func (d DefaultValidator) ValidateRequiredFields(
 		// Get the struct field and its name
 		structField := reflectedType.Field(i)
 		fieldName := structField.Name
-		
+
 		// Check if the field is required
 		isRequired, ok := mapper.IsFieldRequired(fieldName)
 		if !ok {
 			return fmt.Errorf(ErrFieldIsRequiredNotFound, fieldName)
 		}
-		
+
 		// Get the field value and type
 		fieldValue := reflectedValue.Field(i)
 		fieldType := structField.Type
-		
+
 		// Check if the field is initialized
 		isInitialized := d.IsFieldInitialized(fieldValue)
 
@@ -156,7 +156,7 @@ func (d DefaultValidator) ValidateRequiredFields(
 		if !isRequired {
 			continue
 		}
-		
+
 		// Get the field tag name
 		fieldTagName, ok := mapper.GetFieldTagName(fieldName)
 		if !ok {
@@ -187,7 +187,7 @@ func (d DefaultValidator) ValidateRequiredFields(
 			if fieldType.Kind() != reflect.Struct {
 				continue
 			}
-		// Check if the field is a scalar required or optional field
+			// Check if the field is a scalar required or optional field
 		} else if fieldValue.Elem().Kind() != reflect.Struct {
 			continue
 		}

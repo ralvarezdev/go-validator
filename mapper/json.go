@@ -56,7 +56,7 @@ func (j JSONGenerator) NewMapper(structInstance any) (
 	if structInstance == nil {
 		return nil, ErrNilStructInstance
 	}
-	
+
 	// Reflection of data
 	reflectedType := goreflect.GetDereferencedType(structInstance)
 
@@ -82,17 +82,17 @@ func (j JSONGenerator) NewMapper(structInstance any) (
 			rootMapper.SetFieldIsRequired(fieldName, false)
 			continue
 		}
-			
+
 		// Get the JSON tag of the field
-		jsonTag, err := gostringsjson.GetJSONTag(structField, fieldName)
-		if err != nil {
-			return nil, err
+		jsonTag, jsonTagErr := gostringsjson.GetJSONTag(&structField, fieldName)
+		if jsonTagErr != nil {
+			return nil, jsonTagErr
 		}
 
 		// Get the JSON name from the tag
-		jsonName, err := gostringsjson.GetJSONTagName(jsonTag, fieldName)
-		if err != nil {
-			return nil, err
+		jsonName, jsonTagNameErr := gostringsjson.GetJSONTagName(jsonTag, fieldName)
+		if jsonTagNameErr != nil {
+			return nil, jsonTagNameErr
 		}
 
 		// Add field tag name to the map and set the field as parsed
@@ -126,11 +126,11 @@ func (j JSONGenerator) NewMapper(structInstance any) (
 		// Check if the element type is a struct
 		if fieldType.Kind() == reflect.Struct {
 			// Create a new Mapper for the nested struct field
-			fieldNestedMapper, err := j.NewMapper(
+			fieldNestedMapper, mapperErr := j.NewMapper(
 				reflect.New(fieldType).Interface(),
 			)
-			if err != nil {
-				return nil, err
+			if mapperErr != nil {
+				return nil, mapperErr
 			}
 
 			// Add the nested fields to the map
