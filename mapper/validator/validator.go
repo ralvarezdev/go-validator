@@ -7,6 +7,7 @@ import (
 
 	govalidatormapper "github.com/ralvarezdev/go-validator/mapper"
 	govalidatormappervalidation "github.com/ralvarezdev/go-validator/mapper/validation"
+	goreflect "github.com/ralvarezdev/go-reflect"
 )
 
 type (
@@ -115,6 +116,11 @@ func (d DefaultValidator) ValidateRequiredFields(
 		// Get the struct field and its name
 		structField := reflectedType.Field(i)
 		fieldName := structField.Name
+		
+		// Check if the field is exported
+		if !goreflect.IsStructFieldExported(&structField) {
+			continue
+		}
 
 		// Check if the field is required
 		isRequired, ok := mapper.IsFieldRequired(fieldName)
